@@ -1,0 +1,40 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('menu', function (Blueprint $table) {
+            $table->id('menu_id');
+            $table->string('menu_nama');
+            $table->string('menu_foto')->default("default.png");
+            $table->bigInteger('menu_harga');
+            $table->dateTime('menu_tanggal');
+            $table->double('menu_rating', 3, 2)->default(0.00);
+            $table->tinyInteger('menu_status')->comment("0 = tidak aktif, 1 = aktif");
+            $table->unsignedBigInteger('users_id');
+            $table->foreign('users_id')->references('users_id')->on('users');
+            $table->timestamps();
+            $table->softDeletes();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('menu');
+    }
+};
