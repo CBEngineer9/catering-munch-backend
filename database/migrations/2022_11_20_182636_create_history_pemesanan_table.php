@@ -22,6 +22,7 @@ return new class extends Migration
             $table->integer('pemesanan_jumlah');
             $table->bigInteger('pemesanan_total');
             $table->dateTime('pemesanan_tanggal');
+            $table->tinyInteger('pemesanan_status');
         });
     }
 
