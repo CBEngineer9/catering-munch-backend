@@ -3,25 +3,23 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Users extends Model
+class Users extends Authenticatable
 {
     use HasFactory;
     use SoftDeletes;
 
     protected $table = "users";
-    protected $fillable = [
-        "users_email",
-        "users_telepon",
-        "users_nama",
-        "users_alamat",
-        "users_password",
-        "users_saldo",
-        "users_role",
-        "users_status",
-    ];
+    protected $primaryKey = "users_id";
+    protected $guarded = [];
+
+    public function getAuthPassword()
+    {
+        return $this->users_password;
+    }
 
     public function menu()
     {

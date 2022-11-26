@@ -10,12 +10,8 @@ class HistoryLog extends Model
     use HasFactory;
 
     protected $table = "history_log";
-    protected $fillable = [
-        "log_title",
-        "log_desc",
-        "log_datetime",
-        "users_id"
-    ];
+    protected $guarded = [];
+    public $timestamps = false;
 
     public function users()
     {
