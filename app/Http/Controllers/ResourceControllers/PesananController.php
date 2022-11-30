@@ -16,7 +16,7 @@ class PesananController extends Controller
      */
     public function index()
     {
-        $pemesanan = HistoryPemesanan::all();
+        $pemesanan = HistoryPemesanan::all()->toArray();
         return response()->json($pemesanan,200);
     }
 
@@ -63,6 +63,25 @@ class PesananController extends Controller
         // TODO id / auth?
         $currUser = Auth::user();
         if ($currUser->users_role == "provider") {
+            $pemesanan = HistoryPemesanan::where("users_provider",$currUser);
+            return response()->json($pemesanan,200);
+        } else {
+            return response([
+                "status" => "forbidden"
+            ],403);
+        }
+    }
+
+    /**
+     * Get all pesanan to currently logged on customer
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getPesananCustomer()
+    {
+        // TODO id / auth?
+        $currUser = Auth::user();
+        if ($currUser->users_role == "customer") {
             $pemesanan = HistoryPemesanan::where("users_customer",$currUser);
             return response()->json($pemesanan,200);
         } else {

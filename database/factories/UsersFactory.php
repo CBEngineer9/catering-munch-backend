@@ -22,9 +22,33 @@ class UsersFactory extends Factory
             "users_nama" => fake()->name(),
             "users_email" => fake()->email(),
             "users_password" => Hash::make("123"),
-            "users_alamat" => "",
+            "users_alamat" => fake()->address(),
             "users_telepon" => fake()->phoneNumber(),
             "users_role" => $roleList[rand(0,1)],
         ];
+    }
+
+    /**
+     * Indicate that the model's role is provider
+     *
+     * @return static
+     */
+    public function provider()
+    {
+        return $this->state(fn (array $attributes) => [
+            'users_role' => 'provider',
+        ]);
+    }
+
+    /**
+     * Indicate that the model's role is customer
+     *
+     * @return static
+     */
+    public function customer()
+    {
+        return $this->state(fn (array $attributes) => [
+            'users_role' => 'customer',
+        ]);
     }
 }

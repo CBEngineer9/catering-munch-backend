@@ -38,5 +38,8 @@ Route::prefix('admin')->group(function () {
         Route::get('purge', [UsersController::class, 'purge']);
     });
 
+    Route::prefix('provider')->group(function () {
+        Route::resource('menu', MenuController::class);
+    });
 
 });
