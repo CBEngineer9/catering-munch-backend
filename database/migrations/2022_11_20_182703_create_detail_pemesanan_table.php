@@ -22,7 +22,7 @@ return new class extends Migration
             $table->integer('detail_jumlah');
             $table->bigInteger('detail_total');
             $table->dateTime('detail_tanggal');
-            $table->enum('detail_status', ["belum dikirim", "terkirim","diterima"])->default("belum dikirim");
+            $table->enum('detail_status', ["belum dikirim", "terkirim", "diterima"])->default("belum dikirim");
         });
     }
 
