@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\HistoryController;
+use App\Http\Controllers\LoginRegis\LoginController;
+use App\Http\Controllers\ResourceControllers\UsersController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,4 +19,24 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::post('/login', [LoginController::class, 'login']);
+
+Route::prefix('admin')->group(function () {
+    //HISTORY
+    Route::resource('history', HistoryController::class);
+
+    // USERS
+    Route::resource('users', UsersController::class);
+    Route::prefix('users')->group(function () {
+        Route::get('getAllCustomers', [UsersController::class, 'getAllCustomers']);
+        Route::get('getAllProviders', [UsersController::class, 'getAllProviders']);
+        Route::get('banUser', [UsersController::class, 'banUser']);
+        Route::get('unbanUser', [UsersController::class, 'unbanUser']);
+        Route::get('approveProvider', [UsersController::class, 'approveProvider']);
+        Route::get('purge', [UsersController::class, 'purge']);
+    });
+
+
 });

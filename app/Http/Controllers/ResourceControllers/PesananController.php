@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\ResourceControllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\HistoryPemesanan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
-class HistoryController extends Controller
+class PesananController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -14,7 +16,8 @@ class HistoryController extends Controller
      */
     public function index()
     {
-        
+        $pemesanan = HistoryPemesanan::all();
+        return response()->json($pemesanan,200);
     }
 
     /**
@@ -24,7 +27,7 @@ class HistoryController extends Controller
      */
     public function create()
     {
-        abort(404);
+        //
     }
 
     /**
@@ -35,7 +38,7 @@ class HistoryController extends Controller
      */
     public function store(Request $request)
     {
-        abort(404);
+        //
     }
 
     /**
@@ -46,7 +49,27 @@ class HistoryController extends Controller
      */
     public function show($id)
     {
-        abort(404);
+        $pemesanan = HistoryPemesanan::find($id);
+        return response()->json($pemesanan,200);
+    }
+
+    /**
+     * Get all pesanan to currently logged on provider
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getPesananProvider()
+    {
+        // TODO id / auth?
+        $currUser = Auth::user();
+        if ($currUser->users_role == "provider") {
+            $pemesanan = HistoryPemesanan::where("users_customer",$currUser);
+            return response()->json($pemesanan,200);
+        } else {
+            return response([
+                "status" => "forbidden"
+            ],403);
+        }
     }
 
     /**
@@ -57,7 +80,7 @@ class HistoryController extends Controller
      */
     public function edit($id)
     {
-        abort(404);
+        //
     }
 
     /**
@@ -69,7 +92,7 @@ class HistoryController extends Controller
      */
     public function update(Request $request, $id)
     {
-        abort(404);
+        //
     }
 
     /**
@@ -80,6 +103,6 @@ class HistoryController extends Controller
      */
     public function destroy($id)
     {
-        abort(404);
+        //
     }
 }

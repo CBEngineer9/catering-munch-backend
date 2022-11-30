@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\LoginController;
-use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\WebControllers\LoginController;
+use App\Http\Controllers\WebControllers\RegisterController;
 use App\Models\HistoryLog;
 use App\Models\Menu;
 use App\Models\Users;
@@ -65,8 +65,7 @@ Route::prefix('admin')->middleware("CekLogin:admin")->group(function () {
         return view('admin.providers', compact("providerList"));
     })->name('view-admin-providers');
     Route::post('ban/{id}', [AdminController::class, 'ban'])->name('admin-ban');
-    //HISTORY
-    Route::resource('history', HistoryController::class);
+
     // Route::get('history', function (Request $request) {
     //     $search = $request->search;
     //     if ($search) {
