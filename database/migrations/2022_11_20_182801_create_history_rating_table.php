@@ -16,10 +16,10 @@ return new class extends Migration
         Schema::create('history_rating', function (Blueprint $table) {
             $table->id('rating_id');
             $table->integer('rating_score');
-            $table->unsignedBigInteger('menu_id');
-            $table->foreign('menu_id')->references('menu_id')->on('menu');
-            $table->unsignedBigInteger('users_id');
-            $table->foreign('users_id')->references('users_id')->on('users');
+            $table->unsignedBigInteger('users_provider');
+            $table->foreign('users_provider')->references('users_id')->on('users');
+            $table->unsignedBigInteger('users_customer');
+            $table->foreign('users_customer')->references('users_id')->on('users');
             $table->timestamps();
             $table->softDeletes();
         });
