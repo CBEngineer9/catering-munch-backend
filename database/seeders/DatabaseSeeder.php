@@ -26,7 +26,6 @@ class DatabaseSeeder extends Seeder
 
 
         Users::factory()->create([
-            'users_username' => "admin",
             "users_nama" => "admin",
             "users_email" => "admin@admin.com",
             "users_password" => Hash::make("admin"),
@@ -34,7 +33,7 @@ class DatabaseSeeder extends Seeder
             "users_telepon" => fake()->phoneNumber(),
             "users_role" => "admin",
         ]);
-        Users::factory()->count(10)->create();
+        Users::factory()->count(20)->create();
 
     }
 }

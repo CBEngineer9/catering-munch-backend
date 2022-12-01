@@ -28,7 +28,6 @@ Route::prefix('admin')->group(function () {
     Route::resource('history', HistoryController::class);
 
     // USERS
-    Route::resource('users', UsersController::class);
     Route::prefix('users')->group(function () {
         Route::get('getAllCustomers', [UsersController::class, 'getAllCustomers']);
         Route::get('getAllProviders', [UsersController::class, 'getAllProviders']);
@@ -37,9 +36,10 @@ Route::prefix('admin')->group(function () {
         Route::get('approveProvider', [UsersController::class, 'approveProvider']);
         Route::get('purge', [UsersController::class, 'purge']);
     });
+    Route::resource('users', UsersController::class);
 
-    Route::prefix('provider')->group(function () {
-        Route::resource('menu', MenuController::class);
-    });
+});
 
+Route::prefix('provider')->group(function () {
+    Route::resource('menu', MenuController::class);
 });
