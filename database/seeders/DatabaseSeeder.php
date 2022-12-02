@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use App\Models\HistoryPemesanan;
 use App\Models\Menu;
 use App\Models\Users;
 use Illuminate\Database\Seeder;
@@ -36,9 +37,12 @@ class DatabaseSeeder extends Seeder
                 "users_role" => "admin",
             ]);
         }
-        Users::factory()->count(20)->customer()->create();
-        Users::factory()->count(20)->provider()->has(Menu::factory()->count(3))->create();
+        $customers = Users::factory()->count(20)->customer();
+        $providers = Users::factory()->count(20)->provider()->has(Menu::factory()->count(3));
 
-        
+        $customers->create();
+        $providers->create();
+
+        // HistoryPemesanan::factory()->count(5)->for(Users::factory()->customer(),'UsersCustomer')->for(Users::factory()->provider()->has(Menu::factory()->count(3)), 'UsersProvider')->create();
     }
 }

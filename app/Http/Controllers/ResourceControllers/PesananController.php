@@ -61,9 +61,12 @@ class PesananController extends Controller
     public function getPesananProvider()
     {
         // TODO id / auth?
-        $currUser = Auth::user();
+        // return response()->json(Auth::check(),200);
+
+        $currUser = Auth::guard('web')->user();
+        // return response()->json($currUser,200);
         if ($currUser->users_role == "provider") {
-            $pemesanan = HistoryPemesanan::where("users_provider",$currUser);
+            $pemesanan = HistoryPemesanan::where("users_provider",$currUser->users_id);
             return response()->json($pemesanan,200);
         } else {
             return response([

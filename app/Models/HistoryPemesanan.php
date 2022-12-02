@@ -23,12 +23,12 @@ class HistoryPemesanan extends Model
         return $this->hasMany(DetailPemesanan::class, "pemesanan_id", "pemesanan_id");
     }
 
-    public function users_provider()
+    public function UsersProvider()
     {
         return $this->belongsTo(Users::class, "users_provider", "users_id");
     }
 
-    public function users_customer()
+    public function UsersCustomer()
     {
         return $this->belongsTo(Users::class, "users_customer", "users_id");
     }

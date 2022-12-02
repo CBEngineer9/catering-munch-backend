@@ -22,6 +22,7 @@ return new class extends Migration
             $table->integer('pemesanan_jumlah');
             $table->bigInteger('pemesanan_total');
             $table->enum('pemesanan_status', ["menunggu", "ditolak", "diterima", "selesai"])->default("menunggu");
+            $table->timestamps();
         });
     }
 

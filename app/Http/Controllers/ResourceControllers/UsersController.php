@@ -5,6 +5,7 @@ namespace App\Http\Controllers\ResourceControllers;
 use App\Http\Controllers\Controller;
 use App\Models\Users;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class UsersController extends Controller
@@ -36,8 +37,18 @@ class UsersController extends Controller
      *
      * @return \Illuminate\Http\Response
      **/
-    public function getAllProviders()
+    public function getAllProviders(Request $request)
     {
+        $item = new Users();
+        $tablename = $item->getTable();
+        $columns = Schema::getColumnListing($tablename);
+        return response()->json($columns,200);
+        $request->validate([
+            'sort.column',
+            'sort.type',
+            'batch_size',
+            'batch',
+        ]);
         $listUser = Users::withTrashed()->where("users_role","provider")->get()->all();
         return response()->json($listUser,200);
     }
@@ -123,7 +134,6 @@ class UsersController extends Controller
      */
     public function edit($id)
     {
-        // TODO
         abort(404);
     }
 
@@ -136,7 +146,7 @@ class UsersController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        // TODO
     }
 
     /**
