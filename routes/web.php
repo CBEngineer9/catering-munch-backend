@@ -32,7 +32,7 @@ Route::get('logout', function () {
 Route::get('/', function () {
     return view('login');
 })->name('view-login');
-Route::post('login', [LoginController::class, 'login'])->name('login');
+Route::post('login', [LoginController::class, 'login'])->name('web_login');
 
 //REGISTER
 Route::get('register', function () {

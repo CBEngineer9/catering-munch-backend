@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\HistoryController;
 use App\Http\Controllers\LoginRegis\LoginController;
+use App\Http\Controllers\ResourceControllers\MenuController;
+use App\Http\Controllers\ResourceControllers\PesananController;
 use App\Http\Controllers\ResourceControllers\UsersController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -21,7 +23,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('/login', [LoginController::class, 'login']);
+Route::get('/login', [LoginController::class, 'login'])->name('login');
+Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'logout']);
 
 Route::prefix('admin')->group(function () {
     //HISTORY
@@ -43,3 +46,8 @@ Route::prefix('admin')->group(function () {
 Route::prefix('provider')->group(function () {
     Route::resource('menu', MenuController::class);
 });
+
+Route::prefix('pesanan')->group(function () {
+    Route::get('getPesananProvider', [PesananController::class, 'getPesananProvider']);
+});
+Route::resource('pesanan', PesananController::class);

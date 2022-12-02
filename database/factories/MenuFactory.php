@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Users;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,10 +20,11 @@ class MenuFactory extends Factory
         $statusList = ['tersedia','tidak tersedia'];
         return [
             'menu_nama' => fake()->word(),
-            'menu_foto' => fake()->file("/tmp","/img",true),
+            // 'menu_foto' => fake()->file("/tmp","/img",true), // TODO
+            'menu_foto' => fake()->word() . ".png",
             'menu_harga' => fake()->numberBetween(1,10) * 10000,
             'menu_status' => $statusList[rand(0,1)],
-            'user_id'
+            'users_id' => rand(0,Users::count()),
         ];
     }
 }
