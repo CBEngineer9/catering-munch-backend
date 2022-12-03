@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Users;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class UsersController extends Controller
@@ -18,7 +19,10 @@ class UsersController extends Controller
     public function index()
     {
         $listUser = Users::withTrashed()->get()->all();
-        return response()->json($listUser,200);
+        return response()->json([
+            "status" => "success",
+            "data" => $listUser
+        ],200);
     }
 
     /**
@@ -29,7 +33,10 @@ class UsersController extends Controller
     public function getAllCustomers()
     {
         $listUser = Users::withTrashed()->where("users_role","customer")->get()->all();
-        return response()->json($listUser,200);
+        return response()->json([
+            "status" => "success",
+            "data" => $listUser
+        ],200);
     }
 
     /**
@@ -42,15 +49,19 @@ class UsersController extends Controller
         $item = new Users();
         $tablename = $item->getTable();
         $columns = Schema::getColumnListing($tablename);
-        return response()->json($columns,200);
+        // return response()->json($columns,200);
         $request->validate([
-            'sort.column',
-            'sort.type',
-            'batch_size',
-            'batch',
+            'sort' => 'nullable',
+            'sort.column' => [Rule::in($columns)],
+            'sort.type' => [Rule::in(['asc','desc'])],
+            'batch_size' => "integer|gt:0",
+            'batch' => "integer|gt:0",
         ]);
         $listUser = Users::withTrashed()->where("users_role","provider")->get()->all();
-        return response()->json($listUser,200);
+        return response()->json([
+            "status" => 'success',
+            "data" => $listUser
+        ],200);
     }
 
     /**
@@ -65,7 +76,8 @@ class UsersController extends Controller
         $userTerpilih->users_status = "aktif";
         $userTerpilih->save();
         return response()->json([
-            'status' => 'updated'
+            'status' => 'updated',
+            "message" => "successfully approved provider"
         ],200);
     }
 
@@ -95,7 +107,6 @@ class UsersController extends Controller
             "users_alamat" => "required",
             "users_telepon" => "required | numeric | digits_between:8,12 | unique:users,users_telepon",
             "users_role" => [Rule::in(["customer","provider"])],
-            "tna" => "accepted",
         ]);
 
         // all good
@@ -146,6 +157,14 @@ class UsersController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $validator = Validator::make($request->all(),[
+            "users_nama" => "nullable",
+            "users_email" => "nullable | email | unique:users,users_email",
+            "users_password" => "nullable | confirmed",
+            "users_alamat" => "nullable",
+            "users_telepon" => "nullable | numeric | digits_between:8,12 | unique:users,users_telepon",
+            "users_role" => [Rule::in(["customer","provider"])],
+        ]);
         // TODO
     }
 
@@ -159,8 +178,10 @@ class UsersController extends Controller
     {
         $userTerpilih = Users::find($id);
         $userTerpilih->users_status = 'banned';
+        $userTerpilih->save();
         return response([
-            'status' => "success ban",
+            'status' => "success",
+            'message' => "successfuly banned user"
         ],200);
     }
 
@@ -174,8 +195,10 @@ class UsersController extends Controller
     {
         $userTerpilih = Users::find($id);
         $userTerpilih->users_status = 'aktif';
+        $userTerpilih->save();
         return response([
-            'status' => "success unban",
+            'status' => "success",
+            'message' => "successfuly unban user"
         ],200);
     }
 
@@ -189,7 +212,8 @@ class UsersController extends Controller
     {
         Users::withTrashed()->destroy($id);
         return response([
-            'status' => "deleted",
+            'status' => "success",
+            'message' => "successfuly soft delete user"
         ],200);
     }
 
@@ -203,7 +227,8 @@ class UsersController extends Controller
     {
         Users::withTrashed()->find($id)->forceDelete();
         return response([
-            'status' => "deleted",
+            'status' => "success",
+            'message' => "successfuly delete user"
         ],200);
     }
 }

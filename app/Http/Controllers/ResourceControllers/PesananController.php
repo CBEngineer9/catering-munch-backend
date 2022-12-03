@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\ResourceControllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\DetailPemesanan;
 use App\Models\HistoryPemesanan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +18,11 @@ class PesananController extends Controller
     public function index()
     {
         $pemesanan = HistoryPemesanan::all()->toArray();
-        return response()->json($pemesanan,200);
+        return response()->json([
+            'status' => "success",
+            'message' => "successfully fetched data",
+            'data' => $pemesanan
+        ],200);
     }
 
     /**
@@ -27,7 +32,7 @@ class PesananController extends Controller
      */
     public function create()
     {
-        //
+        abort(404);
     }
 
     /**
@@ -38,7 +43,7 @@ class PesananController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // TODO
     }
 
     /**
@@ -50,7 +55,11 @@ class PesananController extends Controller
     public function show($id)
     {
         $pemesanan = HistoryPemesanan::find($id);
-        return response()->json($pemesanan,200);
+        return response()->json([
+            'status' => "success",
+            'message' => "successfully fetched data",
+            'data' => $pemesanan
+        ],200);
     }
 
     /**
@@ -58,16 +67,18 @@ class PesananController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function getPesananProvider()
+    public function getPesananProvider(Request $request)
     {
-        // TODO id / auth?
-        // return response()->json(Auth::check(),200);
-
-        $currUser = Auth::guard('web')->user();
-        // return response()->json($currUser,200);
+        $currUser = $request->user();
         if ($currUser->users_role == "provider") {
-            $pemesanan = HistoryPemesanan::where("users_provider",$currUser->users_id);
-            return response()->json($pemesanan,200);
+            $pemesanan = HistoryPemesanan::where("users_provider",$currUser->users_id)->get()->toArray();
+            return response()->json([
+                "status" => "success",
+                "message" => "successfuly fetched pemesanan",
+                "data" => $pemesanan
+            ],200);
+            // return response()->dro('success',200,'successfuly fetched pemesanan',$pemesanan);
+            // return response()->caps('success');
         } else {
             return response([
                 "status" => "forbidden"
@@ -80,13 +91,16 @@ class PesananController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function getPesananCustomer()
+    public function getPesananCustomer(Request $request)
     {
-        // TODO id / auth?
-        $currUser = Auth::user();
+        $currUser = $request->user();
         if ($currUser->users_role == "customer") {
-            $pemesanan = HistoryPemesanan::where("users_customer",$currUser);
-            return response()->json($pemesanan,200);
+            $pemesanan = HistoryPemesanan::where("users_customer",$currUser)->get()->toArray();
+            return response()->json([
+                "status" => "success",
+                "message" => "successfuly fetched pemesanan",
+                "data" => $pemesanan
+            ],200);
         } else {
             return response([
                 "status" => "forbidden"
@@ -102,7 +116,7 @@ class PesananController extends Controller
      */
     public function edit($id)
     {
-        //
+        abort(404);
     }
 
     /**
@@ -114,7 +128,7 @@ class PesananController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        // TODO
     }
 
     /**
@@ -125,6 +139,11 @@ class PesananController extends Controller
      */
     public function destroy($id)
     {
-        //
+        DetailPemesanan::where("pemesanan_id",$id)->delete();
+        HistoryPemesanan::destroy($id);
+        return response()->json([
+            'status' => "success",
+            'message' => "successfully deleted pesanan"
+        ], 200);
     }
 }

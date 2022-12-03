@@ -18,18 +18,13 @@ class LoginController extends Controller
 
         if ($validator->fails()) {
             return response() ->json([
-                'status' => 'bad request',
-                'message' => 'The request you made is incorrect, check your api manual',
-                'validation_error' => $validator->errors(),
-            ],400);
+                'status' => 'unprocessable content',
+                'message' => 'The request is in the correct form, but the content is invalid. Check your api manual',
+                'errors' => $validator->errors(),
+            ],422);
         }
 
         $credential = $validator->validated();
-
-        $credential = $request->validate([
-            'users_email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
 
         if (Auth::guard('web')->attempt($credential)) {
             session()->regenerate();

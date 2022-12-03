@@ -18,6 +18,15 @@ class Users extends Authenticatable
     protected $primaryKey = "users_id";
     protected $guarded = [];
 
+     /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'users_password',
+    ];
+
     public function getAuthPassword()
     {
         return $this->users_password;
