@@ -62,12 +62,14 @@ Route::prefix('provider')->group(function () {
     Route::prefix('pesanan')->group(function () {
         Route::get('getPesananProvider', [PesananController::class, 'getPesananProvider']);
     });
-    Route::resource('pesanan', PesananController::class);
-    // avaliable endpoints
-    // index, store, show, update, destroy
 });
 
 // endpoint customer
 Route::prefix('customer')->group(function () {
     
 });
+
+// TODO Gates
+Route::resource('pesanan', PesananController::class);
+// avaliable endpoints
+// index, store, show, update, destroy
