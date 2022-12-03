@@ -12,6 +12,7 @@ class Menu extends Model
     use SoftDeletes;
 
     protected $table = "menu";
+    protected $primaryKey = "menu_id";
     protected $fillable = [
         "menu_nama",
         "menu_foto",
@@ -22,7 +23,7 @@ class Menu extends Model
         "users_id",
     ];
 
-    public function users()
+    public function Users()
     {
         return $this->belongsTo(Users::class, "users_id", "users_id");
     }

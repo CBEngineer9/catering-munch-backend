@@ -24,7 +24,22 @@ class MenuFactory extends Factory
             'menu_foto' => fake()->word() . ".png",
             'menu_harga' => fake()->numberBetween(1,10) * 10000,
             'menu_status' => $statusList[rand(0,1)],
-            'users_id' => rand(0,Users::count()),
+            'users_id' => rand(0,Users::count()-1),
         ];
+    }
+
+    /**
+     * Create with price
+     *
+     * @param int $harga
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
+    public function withHarga($harga)
+    {
+        return $this->state(function (array $attributes) use ($harga) {
+            return [
+                'menu_harga' => $harga,
+            ];
+        });
     }
 }

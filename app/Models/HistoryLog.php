@@ -10,10 +10,11 @@ class HistoryLog extends Model
     use HasFactory;
 
     protected $table = "history_log";
+    protected $primaryKey = "log_id";
     protected $guarded = [];
     public $timestamps = false;
 
-    public function users()
+    public function Users()
     {
         return $this->belongsTo(Users::class, "users_id", "users_id");
     }

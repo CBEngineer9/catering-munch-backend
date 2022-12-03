@@ -12,18 +12,19 @@ class HistoryRating extends Model
     use SoftDeletes;
 
     protected $table = "history_rating";
+    protected $primaryKey = "rating_id";
     protected $fillable = [
         "rating_score",
         "menu_id",
         "users_id",
     ];
 
-    public function menu()
+    public function Menu()
     {
         return $this->belongsTo(Menu::class, "menu_id", "menu_id");
     }
 
-    public function users()
+    public function Users()
     {
         return $this->belongsTo(Users::class, "users_id", "users_id");
     }

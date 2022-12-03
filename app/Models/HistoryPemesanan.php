@@ -10,6 +10,7 @@ class HistoryPemesanan extends Model
     use HasFactory;
 
     protected $table = "history_pemesanan";
+    protected $primaryKey = "pemesanan_id";
     protected $fillable = [
         "users_provider",
         "users_customer",
@@ -18,7 +19,7 @@ class HistoryPemesanan extends Model
         "pemesanan_tanggal",
     ];
 
-    public function detail_pemesanan()
+    public function DetailPemesanan()
     {
         return $this->hasMany(DetailPemesanan::class, "pemesanan_id", "pemesanan_id");
     }

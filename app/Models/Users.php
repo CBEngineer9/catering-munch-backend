@@ -23,32 +23,32 @@ class Users extends Authenticatable
         return $this->users_password;
     }
 
-    public function menu()
+    public function Menu()
     {
         return $this->hasMany(Menu::class, "users_id", "users_id");
     }
 
-    public function history_rating()
+    public function HistoryRating()
     {
         return $this->hasMany(HistoryRating::class, "users_id", "users_id");
     }
 
-    public function history_log()
+    public function HistoryLog()
     {
         return $this->hasMany(HistoryLog::class, "users_id", "users_id");
     }
 
-    public function history_topup()
+    public function HistoryTopup()
     {
         return $this->hasMany(HistoryTopup::class, "users_id", "users_id");
     }
 
-    public function history_pemesanan_provider()
+    public function HistoryPemesananProvider()
     {
         return $this->hasMany(HistoryPemesanan::class, 'users_provider', 'users_id');
     }
 
-    public function history_pemesanan_customer()
+    public function HistoryPemesananCustomer()
     {
         return $this->hasMany(HistoryPemesanan::class, "users_customer", "users_id");
     }

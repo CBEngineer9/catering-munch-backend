@@ -10,6 +10,7 @@ class HistoryTopup extends Model
     use HasFactory;
 
     protected $table = "history_topup";
+    protected $primaryKey = "topup_id";
     protected $fillable = [
         "topup_nominal",
         "topup_tanggal",
@@ -17,7 +18,7 @@ class HistoryTopup extends Model
         "users_id",
     ];
 
-    public function users()
+    public function Users()
     {
         return $this->belongsTo(Users::class, "users_id", "users_id");
     }

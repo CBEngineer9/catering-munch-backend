@@ -23,6 +23,8 @@ return new class extends Migration
             $table->bigInteger('detail_total');
             $table->dateTime('detail_tanggal');
             $table->enum('detail_status', ["belum dikirim", "terkirim", "diterima"])->default("belum dikirim");
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
     }
 

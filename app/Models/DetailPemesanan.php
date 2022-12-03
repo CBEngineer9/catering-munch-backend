@@ -10,6 +10,7 @@ class DetailPemesanan extends Model
     use HasFactory;
 
     protected $table = "detail_pemesanan";
+    protected $primaryKey = "datail_id";
     protected $fillable = [
         "pemesanan_id",
         "menu_id",
@@ -17,12 +18,12 @@ class DetailPemesanan extends Model
         "detail_total",
     ];
 
-    public function menu()
+    public function Menu()
     {
         return $this->belongsTo(Menu::class, "menu_id", "menu_id");
     }
 
-    public function history_pemesanan()
+    public function HistoryPemesanan()
     {
         return $this->belongsTo(HistoryPemesanan::class, "pemesanan_id", "pemesanan_id");
     }

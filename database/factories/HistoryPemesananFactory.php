@@ -25,7 +25,8 @@ class HistoryPemesananFactory extends Factory
             "users_customer" => Users::factory()->provider()->has(Menu::factory()->count(3)),
             "pemesanan_jumlah" => 0,
             "pemesanan_total" => 0,
-            "pemesanan_status" => $statusList[rand(0,3)]
+            "pemesanan_status" => $statusList[rand(0,3)],
+            "pemesanan_rating" => fake()->numberBetween(0,10),
         ];
     }
 
@@ -40,7 +41,11 @@ class HistoryPemesananFactory extends Factory
         return $this->afterMaking(function (HistoryPemesanan $historyPemesanan) {
             //
         })->afterCreating(function (HistoryPemesanan $historyPemesanan) {
-            error_log('a');
+            $total = $historyPemesanan->DetailPemesanan->sum('detail_total');
+            $jumlah = $historyPemesanan->DetailPemesanan->count('detail_id');
+            $historyPemesanan->pemesanan_total = $total;
+            $historyPemesanan->pemesanan_jumlah = $jumlah;
+            $historyPemesanan->save();
         });
     }
 }
