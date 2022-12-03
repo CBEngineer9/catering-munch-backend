@@ -33,7 +33,7 @@ Route::post('/register', [RegisterController::class, 'register'])->name('registe
 Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'logout']);
 
 // endpoint admin
-Route::prefix('admin')->middleware(['auth:sanctum','role:admin'])->group(function () {
+Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     //HISTORY
     Route::resource('history', HistoryController::class);
 
@@ -53,7 +53,7 @@ Route::prefix('admin')->middleware(['auth:sanctum','role:admin'])->group(functio
 });
 
 // endpoint providers
-Route::prefix('provider')->middleware(['auth:sanctum','role:provider'])->group(function () {
+Route::prefix('provider')->middleware(['auth:sanctum'])->group(function () {
     Route::resource('menu', MenuController::class);
     // avaliable endpoints
     // index, store, show, update, destroy
@@ -67,6 +67,6 @@ Route::prefix('provider')->middleware(['auth:sanctum','role:provider'])->group(f
 });
 
 // endpoint customer
-Route::prefix('customer')->middleware(['auth:sanctum','role:customer'])->group(function () {
+Route::prefix('customer')->middleware(['auth:sanctum'])->group(function () {
     
 });
