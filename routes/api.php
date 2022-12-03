@@ -34,10 +34,10 @@ Route::prefix('admin')->group(function () {
     Route::prefix('users')->group(function () {
         Route::get('getAllCustomers', [UsersController::class, 'getAllCustomers']);
         Route::get('getAllProviders', [UsersController::class, 'getAllProviders']);
-        Route::get('banUser', [UsersController::class, 'banUser']);
-        Route::get('unbanUser', [UsersController::class, 'unbanUser']);
-        Route::get('approveProvider', [UsersController::class, 'approveProvider']);
-        Route::get('purge', [UsersController::class, 'purge']);
+        Route::get('banUser/{id}', [UsersController::class, 'banUser']);
+        Route::get('unbanUser/{id}', [UsersController::class, 'unbanUser']);
+        Route::get('approveProvider/{id}', [UsersController::class, 'approveProvider']);
+        Route::get('purge/{id}', [UsersController::class, 'purge']);
     });
     Route::resource('users', UsersController::class);
 

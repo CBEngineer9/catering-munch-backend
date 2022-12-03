@@ -25,6 +25,7 @@ class UsersFactory extends Factory
             "users_alamat" => fake()->address(),
             "users_telepon" => fake()->phoneNumber(),
             "users_role" => $roleList[rand(0,1)],
+            'users_status' => "aktif",
         ];
     }
 
@@ -36,6 +37,7 @@ class UsersFactory extends Factory
     public function provider()
     {
         return $this->state(fn (array $attributes) => [
+            'users_status' => "menunggu",
             'users_role' => 'provider',
         ]);
     }
@@ -48,6 +50,7 @@ class UsersFactory extends Factory
     public function customer()
     {
         return $this->state(fn (array $attributes) => [
+            'users_status' => "aktif",
             'users_role' => 'customer',
         ]);
     }
