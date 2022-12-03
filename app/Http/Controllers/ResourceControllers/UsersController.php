@@ -88,7 +88,7 @@ class UsersController extends Controller
      */
     public function create()
     {
-        // TODO
+        // TODO create
         abort(404);
     }
 
@@ -165,7 +165,7 @@ class UsersController extends Controller
             "users_telepon" => "nullable | numeric | digits_between:8,12 | unique:users,users_telepon",
             "users_role" => [Rule::in(["customer","provider"])],
         ]);
-        // TODO
+        // TODO update
     }
 
     /**

@@ -20,7 +20,7 @@ class MenuFactory extends Factory
         $statusList = ['tersedia','tidak tersedia'];
         return [
             'menu_nama' => fake()->word(),
-            // 'menu_foto' => fake()->file("/tmp","/img",true), // TODO
+            // 'menu_foto' => fake()->file("/tmp","/img",true), // TODO foto
             'menu_foto' => fake()->word() . ".png",
             'menu_harga' => fake()->numberBetween(1,10) * 10000,
             'menu_status' => $statusList[rand(0,1)],

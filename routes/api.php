@@ -32,8 +32,9 @@ Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/register', [RegisterController::class, 'register'])->name('register');
 Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'logout']);
 
+// TODO put role middleware 
 // endpoint admin
-Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
+Route::prefix('admin')->group(function () {
     //HISTORY
     Route::resource('history', HistoryController::class);
 
@@ -53,7 +54,7 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
 });
 
 // endpoint providers
-Route::prefix('provider')->middleware(['auth:sanctum'])->group(function () {
+Route::prefix('provider')->group(function () {
     Route::resource('menu', MenuController::class);
     // avaliable endpoints
     // index, store, show, update, destroy
@@ -67,6 +68,6 @@ Route::prefix('provider')->middleware(['auth:sanctum'])->group(function () {
 });
 
 // endpoint customer
-Route::prefix('customer')->middleware(['auth:sanctum'])->group(function () {
+Route::prefix('customer')->group(function () {
     
 });

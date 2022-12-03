@@ -43,7 +43,7 @@ class PesananController extends Controller
      */
     public function store(Request $request)
     {
-        // TODO
+        // TODO store
     }
 
     /**
@@ -128,7 +128,7 @@ class PesananController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // TODO
+        // TODO update
     }
 
     /**
