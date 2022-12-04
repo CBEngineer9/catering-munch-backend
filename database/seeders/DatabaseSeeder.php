@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
                 "users_alamat" => fake()->address(),
                 "users_telepon" => fake()->phoneNumber(),
                 "users_role" => "admin",
+                "users_status" => "aktif",
             ]);
         }
         if (Users::where("users_email","kevin@kevin.com")->count() == 0) {
@@ -47,6 +48,7 @@ class DatabaseSeeder extends Seeder
                 "users_alamat" => fake()->address(),
                 "users_telepon" => fake()->phoneNumber(),
                 "users_role" => "customer",
+                "users_status" => "aktif",
             ]);
         }
         if (Users::where("users_email","provider@provider.com")->count() == 0) {
@@ -57,6 +59,7 @@ class DatabaseSeeder extends Seeder
                 "users_alamat" => fake()->address(),
                 "users_telepon" => fake()->phoneNumber(),
                 "users_role" => "provider",
+                "users_status" => "aktif",
             ]);
         }
         $customers = Users::factory()->count(20)->customer()->has(HistoryTopup::factory())->create();

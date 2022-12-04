@@ -32,7 +32,7 @@ Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/register', [RegisterController::class, 'register'])->name('register');
 Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'logout']);
 
-// TODO put role middleware 
+// FIXME put role middleware 
 // endpoint admin
 Route::prefix('admin')->group(function () {
     //HISTORY
@@ -46,9 +46,10 @@ Route::prefix('admin')->group(function () {
         Route::patch('unbanUser/{id}', [UsersController::class, 'unbanUser']);
         Route::patch('approveProvider/{id}', [UsersController::class, 'approveProvider']);
         Route::delete('purge/{id}', [UsersController::class, 'purge']);
+        Route::post('restore/{id}', [UsersController::class, 'restore']);
     });
     Route::resource('users', UsersController::class);
-    // avaliable endpoints
+    // avaliable actions
     // index, store, show, update, destroy
     // https://laravel.com/docs/9.x/controllers#actions-handled-by-resource-controller
 });
@@ -56,7 +57,7 @@ Route::prefix('admin')->group(function () {
 // endpoint providers
 Route::prefix('provider')->group(function () {
     Route::resource('menu', MenuController::class);
-    // avaliable endpoints
+    // avaliable actions
     // index, store, show, update, destroy
 
     Route::prefix('pesanan')->group(function () {
@@ -69,7 +70,6 @@ Route::prefix('customer')->group(function () {
     
 });
 
-// TODO Gates
 Route::resource('pesanan', PesananController::class);
-// avaliable endpoints
+// avaliable actions
 // index, store, show, update, destroy

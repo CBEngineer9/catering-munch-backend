@@ -42,12 +42,12 @@ class MenuController extends Controller
         // TODO upload foto
         $menu = $request->validate([
             'menu_nama' => "string",
-            'menu_foto' => "file",
+            'menu_foto' => "file|image|max:4194",
             'menu_harga' => "integer|gte:100",
             'menu_status' => [Rule::in(['tersedia','tidak tersedia'])],
         ]);
 
-        $curr = Auth::user();
+        $curr = $request->user();
         $menu = new Menu($request->all());
         $menu->users_id = $curr->users_id;
         $menu->save();
@@ -91,16 +91,26 @@ class MenuController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'menu_nama' => "string",
-            'menu_harga' => "integer|gte:100",
-            'menu_status' => [Rule::in(['tersedia','tidak tersedia'])]
+            'menu_nama' => "nullable|string",
+            "menu_foto" => "nullable|file|image|max:4194",
+            'menu_harga' => "nullable|integer|gte:100",
+            "menu_tanggal" => "nullable|date",
+            'menu_status' => ["nullable", Rule::in(['tersedia','tidak tersedia'])]
         ]);
 
         $menuTerpilih = Menu::find($id);
-        $menuTerpilih->menu_nama = $request->menu_nama;
-        $menuTerpilih->menu_harga = $request->menu_harga;
-        $menuTerpilih->menu_status = $request->menu_status;
-        // TODO TANGGAL MASAK?
+        $columns = [
+            "menu_nama",
+            "menu_foto",
+            "menu_harga",
+            "menu_tanggal",
+            "menu_status",
+        ];
+        foreach ($columns as $column) {
+            if ($request->has($column)) {
+                $menuTerpilih->$column = $request->$column;
+            }
+        }
         $menuTerpilih->save();
 
         return response()->json([

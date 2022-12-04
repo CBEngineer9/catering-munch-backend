@@ -16,7 +16,16 @@ class Users extends Authenticatable
 
     protected $table = "users";
     protected $primaryKey = "users_id";
-    protected $guarded = [];
+    protected $fillable = [
+        'users_email',
+        'users_telepon',
+        'users_nama',
+        'users_alamat',
+        'users_password',
+        'users_saldo',
+        'users_role',
+        'users_status'
+    ];
 
      /**
      * The attributes that should be hidden for serialization.
@@ -25,11 +34,19 @@ class Users extends Authenticatable
      */
     protected $hidden = [
         'users_password',
+        'created_at',
+        'updated_at',
+        'deleted_at'
     ];
 
     public function getAuthPassword()
     {
         return $this->users_password;
+    }
+
+    public function isAdministrator()
+    {
+        return $this->users_role === 'admin';
     }
 
     public function Menu()

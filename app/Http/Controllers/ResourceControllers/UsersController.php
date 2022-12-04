@@ -72,7 +72,7 @@ class UsersController extends Controller
      **/
     public function approveProvider($id)
     {
-        $userTerpilih = Users::find($id);
+        $userTerpilih = Users::findOrFail($id);
         $userTerpilih->users_status = "aktif";
         $userTerpilih->save();
         return response()->json([
@@ -88,7 +88,6 @@ class UsersController extends Controller
      */
     public function create()
     {
-        // TODO create
         abort(404);
     }
 
@@ -121,7 +120,8 @@ class UsersController extends Controller
         ]);
 
         return response([
-            "status" => "created"
+            "status" => "created",
+            'message' => "successfully created user"
         ],201);
     }
 
@@ -133,7 +133,7 @@ class UsersController extends Controller
      */
     public function show($id)
     {
-        $user = Users::withTrashed()->find($id);
+        $user = Users::withTrashed()->findOrFail($id);
         return response()->json($user,200);
     }
 
@@ -163,9 +163,29 @@ class UsersController extends Controller
             "users_password" => "nullable | confirmed",
             "users_alamat" => "nullable",
             "users_telepon" => "nullable | numeric | digits_between:8,12 | unique:users,users_telepon",
-            "users_role" => [Rule::in(["customer","provider"])],
+            "users_role" => ["nullable", Rule::in(["customer","provider"])],
         ]);
-        // TODO update
+        if ($validator->fails()) {
+            return response() ->json([
+                'status' => 'unprocessable content',
+                'message' => 'The request is in the correct form, but the content is invalid. Check your api manual',
+                'errors' => $validator->errors(),
+            ],422);
+        }
+
+        // all good
+        $userTerpilih = Users::findOrFail($id);
+        $columns = $userTerpilih->getFillable();
+        foreach ($columns as $column) {
+            if ($request->has($column)) {
+                $userTerpilih->$column = $request->$column;
+            }
+        }
+        $userTerpilih->save();
+        return response()->json([
+            'status' => 'created',
+            'message' => "succesfully updated user"
+        ],201);
     }
 
     /**
@@ -176,7 +196,13 @@ class UsersController extends Controller
      */
     public function banUser($id)
     {
-        $userTerpilih = Users::find($id);
+        $userTerpilih = Users::findOrFail($id);
+        if ($userTerpilih->users_status == 'banned') {
+            return response([
+                'status' => "bad request",
+                'message' => "user already banned"
+            ],400);
+        }
         $userTerpilih->users_status = 'banned';
         $userTerpilih->save();
         return response([
@@ -193,7 +219,13 @@ class UsersController extends Controller
      */
     public function unbanUser($id)
     {
-        $userTerpilih = Users::find($id);
+        $userTerpilih = Users::findOrFail($id);
+        if ($userTerpilih->users_status == 'aktif') {
+            return response([
+                'status' => "bad request",
+                'message' => "user is not banned"
+            ],400);
+        }
         $userTerpilih->users_status = 'aktif';
         $userTerpilih->save();
         return response([
@@ -210,10 +242,25 @@ class UsersController extends Controller
      */
     public function destroy($id)
     {
-        Users::withTrashed()->destroy($id);
+        Users::destroy($id);
         return response([
             'status' => "success",
             'message' => "successfuly soft delete user"
+        ],200);
+    }
+
+    /**
+     * Restore the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function restore($id)
+    {
+        Users::withTrashed()->findOrFail($id)->restore();
+        return response([
+            'status' => "success",
+            'message' => "successfuly restore user"
         ],200);
     }
 
@@ -225,7 +272,7 @@ class UsersController extends Controller
      */
     public function purge($id)
     {
-        Users::withTrashed()->find($id)->forceDelete();
+        Users::withTrashed()->findOrFail($id)->forceDelete();
         return response([
             'status' => "success",
             'message' => "successfuly delete user"

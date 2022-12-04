@@ -12,14 +12,14 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(),[
-            'users_email' => ['required', 'email'],
+            'users_email' => ['required', 'email', 'exists:App\Models\Users,users_email'],
             'password' => ['required'],
         ]);
 
         if ($validator->fails()) {
             return response() ->json([
                 'status' => 'unprocessable content',
-                'message' => 'The request is in the correct form, but the content is invalid. Check your api manual',
+                'message' => 'Wrong email / password',
                 'errors' => $validator->errors(),
             ],422);
         }
@@ -40,8 +40,9 @@ class LoginController extends Controller
             ],200);
         } else {
             return response([
-                'status' => 'failed to login'
-            ],200);
+                'status' => 'unprocessable request',
+                'message' => 'Wrong email / password'
+            ],422);
         }
     }
 
