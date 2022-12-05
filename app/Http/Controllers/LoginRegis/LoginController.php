@@ -29,7 +29,7 @@ class LoginController extends Controller
         if (Auth::guard('web')->attempt($credential)) {
             session()->regenerate();
             $user = Auth::guard('web')->user();
-            return response([
+            return response()->json([
                 'status' => 'success',
                 'message' => 'successfuly logged in',
                 'user' => [
