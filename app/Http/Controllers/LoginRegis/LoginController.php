@@ -39,7 +39,7 @@ class LoginController extends Controller
                 ],
             ],200);
         } else {
-            return response([
+            return response()->json([
                 'status' => 'unprocessable request',
                 'message' => 'Wrong email / password'
             ],422);
