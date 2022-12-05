@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\ResourceControllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\PemesananResource;
 use App\Models\DetailPemesanan;
 use App\Models\HistoryPemesanan;
 use App\Models\Menu;
@@ -32,6 +33,7 @@ class PesananController extends Controller
      */
     public function index(Request $request)
     {
+        // TODO pagination
         $currUser = $request->user();
         if ($currUser->users_role == 'admin') {
             $pemesanan = HistoryPemesanan::all()->toArray();
@@ -86,7 +88,6 @@ class PesananController extends Controller
     {
         // already authorize
 
-        // TODO store
         $currUser = new Users((Array)json_decode($request->user()));
         $statusList = [
             'belum dikirim',
@@ -107,8 +108,13 @@ class PesananController extends Controller
                 Rule::in($statusList)
             ],
         ]);
-
-        return $validator->validated(); // BUG required no workey
+        if ($validator->fails()) {
+            return response() ->json([
+                'status' => 'unprocessable content',
+                'message' => 'Data error', // FIXME better sentence
+                'errors' => $validator->errors(),
+            ],422);
+        }
 
         if ($request->user()->isAdministrator()) {
             $users_customer = $request->users_customer;
@@ -125,19 +131,48 @@ class PesananController extends Controller
             $historyPemesanan->users_provider = $request->users_provider;
             $historyPemesanan->users_customer = $users_customer;
             $historyPemesanan->pemesanan_status = 'menunggu';
-            return $historyPemesanan;
+            $historyPemesanan->pemesanan_jumlah = count($details);
+            $historyPemesanan->pemesanan_total = 0;
+            $historyPemesanan->pemesanan_rating = 0;
+            $historyPemesanan->save();
+            
             foreach ($details as $detail) {
-                $menu = Menu::find($detail->menu_id);
+                $menu = Menu::find($detail['menu_id']);
                 $total += $menu->menu_harga;
+                
+                $detail_model = new DetailPemesanan();
+                $detail_model->pemesanan_id = $historyPemesanan->pemesanan_id;
+                $detail_model->menu_id = $detail['menu_id'];
+                $detail_model->detail_jumlah = $detail['detail_jumlah'];
+                $detail_model->detail_total = $detail['detail_jumlah'] * $menu->menu_harga;
+                $detail_model->detail_tanggal = $detail['detail_tanggal'];
+                if ($request->has('detail_status')) {
+                    $status = $request->detail_status;
+                } else {
+                    $status = 'belum dikirim';
+                }
+                $detail_model->detail_status = $status;
+                $detail_model->save();
             }
+            $historyPemesanan->pemesanan_total = $total;
+            $historyPemesanan->save();
+
+            DB::commit();
         } catch (\Throwable $th) {
             DB::rollback();
             return response()->json([
                 'status' => "server error",
                 'message' => "mysql error",
-                "sql_error" => $th->getMessage()
+                "errors" => [
+                    'mysql_error' => $th->getMessage()
+                ]
             ],500);
         }
+
+        return response()->json([
+            'status' => 'created',
+            'message' => 'successfully created pemesanan'
+        ]);
         
     }
 
@@ -149,13 +184,12 @@ class PesananController extends Controller
      */
     public function show($id)
     {
-        // TODO return relation
         $pemesanan = HistoryPemesanan::findOrFail($id);
         $this->authorize('view',$pemesanan);
         return response()->json([
             'status' => "success",
             'message' => "successfully fetched data",
-            'data' => $pemesanan
+            'data' => new PemesananResource($pemesanan)
         ],200);
     }
 
@@ -233,6 +267,14 @@ class PesananController extends Controller
         $validator = Validator::make( $request->all(),[
             ""
         ]);
+        
+        if ($validator->fails()) {
+            return response() ->json([
+                'status' => 'unprocessable content',
+                'message' => 'Data error.', // FIXME better sentence?
+                'errors' => $validator->errors(),
+            ],422);
+        }
     }
 
     /**

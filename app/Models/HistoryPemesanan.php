@@ -19,6 +19,16 @@ class HistoryPemesanan extends Model
         "pemesanan_tanggal",
     ];
 
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'created_at',
+        'updated_at'
+    ];
+
     public function DetailPemesanan()
     {
         return $this->hasMany(DetailPemesanan::class, "pemesanan_id", "pemesanan_id");

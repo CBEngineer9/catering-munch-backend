@@ -17,6 +17,7 @@ class MenuController extends Controller
      */
     public function index()
     {
+        // TODO pagination
         $menu = Menu::all()->toArray();
         return response($menu,200);
     }
@@ -54,7 +55,7 @@ class MenuController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => "berhasil tambah menu",
+            'message' => "Successfully added menu",
         ],200);
     }
 
@@ -115,7 +116,7 @@ class MenuController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'berhasil update'
+            'message' => 'successfully update menu'
         ],200);
     }
 
@@ -130,7 +131,7 @@ class MenuController extends Controller
         Menu::destroy($id);
         return response()->json([
             'status' => 'success',
-            'message' => 'menu deleted',
+            'message' => 'Successfully deleted menu',
             'code' => 200
         ],200);
     }

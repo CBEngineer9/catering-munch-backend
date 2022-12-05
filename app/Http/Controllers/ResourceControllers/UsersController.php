@@ -16,11 +16,31 @@ class UsersController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $listUser = Users::withTrashed()->get()->all();
+        $new_user = new Users();
+        $tablename = $new_user->getTable();
+        $columns = Schema::getColumnListing($tablename);
+        $request->validate([
+            'sort' => 'nullable',
+            'sort.column' => [ 'required_with:sort.type' , Rule::in($columns)],
+            'sort.type' => ['required_with:sort.column', Rule::in(['asc','desc'])],
+            'batch_size' => ["integer", "gt:0"],
+            "role" => ['nullable', Rule::in(['admin','customer','provider'])]
+        ]);
+
+        $sort_column = $request->sort->column ?? "users_id";
+        $sort_type = $request->sort->column ?? "asc";
+        $batch_size = $request->batch_size ?? 10;
+
+        $listUser = Users::withTrashed()->orderBy($sort_column,$sort_type);
+        if ($request->has('role')) {
+            $listUser = $listUser->where('users_role',$request->role);
+        }
+        $listUser = $listUser->paginate($batch_size);
         return response()->json([
             "status" => "success",
+            "message" => "successfully fetched all user",
             "data" => $listUser
         ],200);
     }
@@ -28,6 +48,7 @@ class UsersController extends Controller
     /**
      * Displays all customer
      *
+     * @deprecated This method is no longer acceptable get all customer. Use fetch with request body instead.
      * @return \Illuminate\Http\Response
      **/
     public function getAllCustomers()
@@ -168,7 +189,7 @@ class UsersController extends Controller
         if ($validator->fails()) {
             return response() ->json([
                 'status' => 'unprocessable content',
-                'message' => 'The request is in the correct form, but the content is invalid. Check your api manual',
+                'message' => 'Data error', // FIXME better sentence?
                 'errors' => $validator->errors(),
             ],422);
         }
