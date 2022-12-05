@@ -20,6 +20,7 @@ class RegisterController extends Controller
             "users_alamat" => "required",
             "users_telepon" => "required | numeric | digits_between:8,12 | unique:users,users_telepon",
             "users_role" => [Rule::in(["customer","provider"])],
+            "tnc" => "accepted",
         ]);
 
         if ($validator->fails()) {
