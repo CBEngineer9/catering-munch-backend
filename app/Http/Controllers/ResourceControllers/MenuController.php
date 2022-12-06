@@ -18,7 +18,7 @@ class MenuController extends Controller
     public function index()
     {
         $menu = Menu::all()->toArray();
-        return response($menu,200);
+        return response()->json($menu,200);
     }
 
     /**
@@ -67,7 +67,7 @@ class MenuController extends Controller
     public function show($id)
     {
         $menuTerpilih = Menu::find($id)->toArray();
-        return response($menuTerpilih,200);
+        return response()->json($menuTerpilih,200);
     }
 
     /**
