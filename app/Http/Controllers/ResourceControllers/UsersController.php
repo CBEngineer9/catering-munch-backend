@@ -140,7 +140,7 @@ class UsersController extends Controller
             "users_status" => $request->users_role == "customer" ? "aktif" : "menunggu"
         ]);
 
-        return response([
+        return response()->json([
             "status" => "created",
             'message' => "successfully created user"
         ],201);
@@ -219,14 +219,14 @@ class UsersController extends Controller
     {
         $userTerpilih = Users::findOrFail($id);
         if ($userTerpilih->users_status == 'banned') {
-            return response([
+            return response()->json([
                 'status' => "bad request",
                 'message' => "user already banned"
             ],400);
         }
         $userTerpilih->users_status = 'banned';
         $userTerpilih->save();
-        return response([
+        return response()->json([
             'status' => "success",
             'message' => "successfuly banned user"
         ],200);
@@ -242,14 +242,14 @@ class UsersController extends Controller
     {
         $userTerpilih = Users::findOrFail($id);
         if ($userTerpilih->users_status == 'aktif') {
-            return response([
+            return response()->json([
                 'status' => "bad request",
                 'message' => "user is not banned"
             ],400);
         }
         $userTerpilih->users_status = 'aktif';
         $userTerpilih->save();
-        return response([
+        return response()->json([
             'status' => "success",
             'message' => "successfuly unban user"
         ],200);
@@ -264,7 +264,7 @@ class UsersController extends Controller
     public function destroy($id)
     {
         Users::destroy($id);
-        return response([
+        return response()->json([
             'status' => "success",
             'message' => "successfuly soft delete user"
         ],200);
@@ -279,7 +279,7 @@ class UsersController extends Controller
     public function restore($id)
     {
         Users::withTrashed()->findOrFail($id)->restore();
-        return response([
+        return response()->json([
             'status' => "success",
             'message' => "successfuly restore user"
         ],200);
@@ -294,7 +294,7 @@ class UsersController extends Controller
     public function purge($id)
     {
         Users::withTrashed()->findOrFail($id)->forceDelete();
-        return response([
+        return response()->json([
             'status' => "success",
             'message' => "successfuly delete user"
         ],200);

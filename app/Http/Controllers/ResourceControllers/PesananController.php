@@ -59,7 +59,7 @@ class PesananController extends Controller
                 "data" => $pemesanan
             ],200);
         } else {
-            return response([
+            return response()->json([
                 "status" => "forbidden"
             ],403);
         }
@@ -211,7 +211,7 @@ class PesananController extends Controller
             // return response()->dro('success',200,'successfuly fetched pemesanan',$pemesanan);
             // return response()->caps('success');
         } else {
-            return response([
+            return response()->json([
                 "status" => "forbidden"
             ],403);
         }
@@ -233,7 +233,7 @@ class PesananController extends Controller
                 "data" => $pemesanan
             ],200);
         } else {
-            return response([
+            return response()->json([
                 "status" => "forbidden"
             ],403);
         }

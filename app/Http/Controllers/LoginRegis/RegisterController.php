@@ -42,7 +42,7 @@ class RegisterController extends Controller
             "users_status" => $request->users_role == "customer" ? "aktif" : "menunggu"
         ]);
 
-        return response([
+        return response()->json([
             "status" => "created",
             "message" => "successfully registered new account"
         ],201);
