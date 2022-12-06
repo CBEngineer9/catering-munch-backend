@@ -19,7 +19,7 @@ class RegisterController extends Controller
             "users_password" => "required | confirmed",
             "users_alamat" => "required",
             "users_telepon" => "required | numeric | digits_between:8,12 | unique:users,users_telepon",
-            "users_role" => [Rule::in(["customer","provider"])],
+            "users_role" => ["required", Rule::in(["customer","provider"])],
             "tnc" => "accepted",
         ]);
 
