@@ -22,7 +22,11 @@ use Illuminate\Support\Facades\Route;
 
 // untuk cek siapa yang login
 Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
-    return $request->user();
+    return response()->json([
+        "status" => 'success',
+        'message' => 'successfully fetched current user',
+        "data" => $request->user(),
+    ]);
 });
 
 // Tembak dulu sanctum/csrf-cookie untuk dapat csrf token
