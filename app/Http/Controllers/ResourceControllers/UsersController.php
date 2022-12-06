@@ -29,8 +29,8 @@ class UsersController extends Controller
             "role" => ['nullable', Rule::in(['admin','customer','provider'])]
         ]);
 
-        $sort_column = $request->sort->column ?? "users_id";
-        $sort_type = $request->sort->column ?? "asc";
+        $sort_column = $request->sort['column'] ?? "users_id";
+        $sort_type = $request->sort['type'] ?? "asc";
         $batch_size = $request->batch_size ?? 10;
 
         $listUser = Users::withTrashed()->orderBy($sort_column,$sort_type);
@@ -126,7 +126,7 @@ class UsersController extends Controller
             "users_password" => "required | confirmed",
             "users_alamat" => "required",
             "users_telepon" => "required | numeric | digits_between:8,12 | unique:users,users_telepon",
-            "users_role" => [Rule::in(["customer","provider"])],
+            "users_role" => ["required", Rule::in(["customer","provider"])],
         ]);
 
         // all good
