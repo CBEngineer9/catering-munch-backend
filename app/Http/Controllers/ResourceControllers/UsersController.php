@@ -189,7 +189,7 @@ class UsersController extends Controller
         if ($validator->fails()) {
             return response() ->json([
                 'status' => 'unprocessable content',
-                'message' => 'Data error', // FIXME better sentence?
+                'message' => 'There are errors found on the data you have entered',
                 'errors' => $validator->errors(),
             ],422);
         }

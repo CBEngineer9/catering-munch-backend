@@ -26,7 +26,7 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
         "status" => 'success',
         'message' => 'successfully fetched current user',
         "data" => $request->user(),
-    ]);
+    ],200);
 });
 
 // Tembak dulu sanctum/csrf-cookie untuk dapat csrf token

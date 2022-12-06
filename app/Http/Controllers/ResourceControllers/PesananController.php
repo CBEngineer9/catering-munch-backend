@@ -23,7 +23,8 @@ class PesananController extends Controller
      */
     public function __construct()
     {
-        $this->authorizeResource(HistoryPemesanan::class, 'pesanan');
+        // brokey do not use
+        // $this->authorizeResource(HistoryPemesanan::class, 'pesanan');
     }
 
     /**
@@ -33,6 +34,9 @@ class PesananController extends Controller
      */
     public function index(Request $request)
     {
+        // authorize
+        $this->authorize('viewAny', HistoryPemesanan::class);
+
         // TODO pagination
         $currUser = $request->user();
         if ($currUser->users_role == 'admin') {
@@ -86,7 +90,8 @@ class PesananController extends Controller
      */
     public function store(Request $request)
     {
-        // already authorize
+        // authorize
+        $this->authorize('create', HistoryPemesanan::class);
 
         $currUser = new Users((Array)json_decode($request->user()));
         $statusList = [
@@ -96,9 +101,15 @@ class PesananController extends Controller
         ];
         // customer tidak pelu give id
         $validator = Validator::make($request->all(),[
-            "users_customer" => [Rule::requiredIf($currUser->isAdministrator()), "exists:App\Models\Users,users_id"],
+            "pemesanan_id" => "prohibited",
+            "users_customer" => [
+                Rule::prohibitedIf(!$currUser->isAdministrator()), 
+                Rule::requiredIf($currUser->isAdministrator()), 
+                "exists:App\Models\Users,users_id" 
+            ],
             "users_provider" => "required | exists:App\Models\Users,users_id",
             "details" => "required",
+            "details.*.detail_id" => "prohibited",
             "details.*.menu_id" => "required | exists:App\Models\Menu,menu_id",
             "details.*.detail_jumlah" => "required | integer",
             "details.*.detail_tanggal" => "required | date",
@@ -111,7 +122,7 @@ class PesananController extends Controller
         if ($validator->fails()) {
             return response() ->json([
                 'status' => 'unprocessable content',
-                'message' => 'Data error', // FIXME better sentence
+                'message' => 'There are errors found on the data you have entered',
                 'errors' => $validator->errors(),
             ],422);
         }
@@ -184,8 +195,10 @@ class PesananController extends Controller
      */
     public function show($id)
     {
-        $pemesanan = HistoryPemesanan::findOrFail($id);
+        // authorize
+        $pemesanan = HistoryPemesanan::find($id);
         $this->authorize('view',$pemesanan);
+
         return response()->json([
             'status' => "success",
             'message' => "successfully fetched data",
@@ -212,7 +225,8 @@ class PesananController extends Controller
             // return response()->caps('success');
         } else {
             return response()->json([
-                "status" => "forbidden"
+                "status" => "forbidden",
+                "message" => "You are not permitted to view this resource",
             ],403);
         }
     }
@@ -234,7 +248,8 @@ class PesananController extends Controller
             ],200);
         } else {
             return response()->json([
-                "status" => "forbidden"
+                "status" => "forbidden",
+                "message" => "You are not permitted to view this resource",
             ],403);
         }
     }
@@ -264,17 +279,36 @@ class PesananController extends Controller
         $this->authorize('update',$pesanan);
         // return $request->user()->can('view',HistoryPemesanan::find($id));
         
-        $validator = Validator::make( $request->all(),[
-            ""
+        $currUser = new Users((Array)json_decode($request->user()));
+        $statusList = [
+            'belum dikirim',
+            'terkirim',
+            'diterima'
+        ];
+        $validator = Validator::make($request->all(),[
+            "pemesanan_id" => "prohibited",
+            "users_customer" => ["exists:App\Models\Users,users_id"],
+            "users_provider" => "nullable | exists:App\Models\Users,users_id",
+            "details" => "nullable",
+            "details.*.detail_id" => "prohibited",
+            "details.*.menu_id" => "nullable | exists:App\Models\Menu,menu_id",
+            "details.*.detail_jumlah" => "nullable | integer",
+            "details.*.detail_tanggal" => "nullable | date",
+            "details.*.detail_status" => [
+                Rule::prohibitedIf(!$currUser->isAdministrator()),
+                Rule::in($statusList)
+            ],
         ]);
         
         if ($validator->fails()) {
             return response() ->json([
                 'status' => 'unprocessable content',
-                'message' => 'Data error.', // FIXME better sentence?
+                'message' => 'There are errors found on the data you have entered',
                 'errors' => $validator->errors(),
             ],422);
         }
+        // drop then insert? upsert?
+        // check status
     }
 
     /**

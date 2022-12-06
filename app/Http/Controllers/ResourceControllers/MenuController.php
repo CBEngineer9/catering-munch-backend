@@ -3,9 +3,14 @@
 namespace App\Http\Controllers\ResourceControllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\HistoryMenu;
 use App\Models\Menu;
+use App\Models\Users;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class MenuController extends Controller
@@ -15,11 +20,39 @@ class MenuController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         // TODO pagination
-        $menu = Menu::all()->toArray();
-        return response()->json($menu,200);
+        $new_menu = new Menu();
+        $tablename = $new_menu->getTable();
+        $columns = Schema::getColumnListing($tablename);
+        $request->validate([
+            "role" => ['nullable', Rule::in(['admin','customer','provider'])],
+            "provider_id" => "nullable|exists:App/Model/Users,users_id",
+            'sort' => 'nullable',
+            'sort.column' => [ 'required_with:sort.type' , Rule::in($columns)],
+            'sort.type' => ['required_with:sort.column', Rule::in(['asc','desc'])],
+            'batch_size' => ["integer", "gt:0"],
+        ]);
+
+        $sort_column = $request->sort->column ?? "users_id";
+        $sort_type = $request->sort->column ?? "asc";
+        $batch_size = $request->batch_size ?? 10;
+
+        // TODO perlu = ?
+        $listMenu = Menu::withTrashed()->orderBy($sort_column,$sort_type);
+        if ($request->has('role')) {
+            $listMenu = $listMenu->where('users_role',$request->role);
+        }
+        if ($request->has('provider_id')) {
+            $listMenu = $listMenu->where('users_id',$request->provider_id);
+        }
+        $listMenu = $listMenu->paginate($batch_size);
+        return response()->json([
+            'status' => "success",
+            'message' => "successfully fetched all menu",
+            'data' => $listMenu
+        ],200);
     }
 
     /**
@@ -40,18 +73,58 @@ class MenuController extends Controller
      */
     public function store(Request $request)
     {
-        // TODO upload foto
-        $menu = $request->validate([
+        // TODO upload foto, validation
+        $currUser = new Users((Array)json_decode($request->user()));
+        $validator = Validator::make($request->all(),[
             'menu_nama' => "string",
             'menu_foto' => "file|image|max:4194",
             'menu_harga' => "integer|gte:100",
             'menu_status' => [Rule::in(['tersedia','tidak tersedia'])],
+            'users_id' => [
+                Rule::prohibitedIf(!$currUser->isAdministrator()), 
+                Rule::requiredIf($currUser->isAdministrator()), 
+                "exists:App\Models\Users,users_id" 
+            ],
         ]);
+        if ($validator->fails()) {
+            return response() ->json([
+                'status' => 'unprocessable content',
+                'message' => 'There are errors found on the data you have entered',
+                'errors' => $validator->errors(),
+            ],422);
+        }
 
-        $curr = $request->user();
-        $menu = new Menu($request->all());
-        $menu->users_id = $curr->users_id;
-        $menu->save();
+        $validator->validated; // TODO
+        
+        if ($request->user()->isAdministrator()) {
+            $users_id = $request->users_id;
+        } else if ($request->user()->users_role === 'customer') {
+            $users_id = $request->user()->users_id;
+        } 
+        
+        $menu = new Menu();
+        $menu->menu_nama = 
+        $menu->users_id = $users_id;
+
+        $hist = new HistoryMenu();
+        $hist->history_menu_action = "Created menu";
+        $hist->menu_id = $menu->menu_id;
+        
+        DB::beginTransaction();
+        try {
+            $menu->save();  // insert menu
+            $hist->save();  // insert history
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollback();
+            return response()->json([
+                'status' => "server error",
+                'message' => "mysql error",
+                "errors" => [
+                    'mysql_error' => $th->getMessage()
+                ]
+            ],500);
+        }
 
         return response()->json([
             'status' => 'success',
@@ -112,7 +185,34 @@ class MenuController extends Controller
                 $menuTerpilih->$column = $request->$column;
             }
         }
-        $menuTerpilih->save();
+
+        $edited = "";
+        foreach ($request->all() as $req_name => $req_value) {
+            $edited .= $req_name . ", ";
+        }
+        $edited = substr($edited,0,-2);
+
+        $hist = new HistoryMenu();
+        $hist->history_menu_action = "Edited " . $edited;
+        $hist->menu_id = $id;
+
+        return $hist;
+        
+        // DB::beginTransaction();
+        // try {
+        //     $menuTerpilih->save();
+        //     $hist->save();
+        //     DB::commit();
+        // } catch (\Throwable $th) {
+        //     DB::rollback();
+        //     return response()->json([
+        //         'status' => "server error",
+        //         'message' => "mysql error",
+        //         "errors" => [
+        //             'mysql_error' => $th->getMessage()
+        //         ]
+        //     ],500);
+        // }
 
         return response()->json([
             'status' => 'success',
