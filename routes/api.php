@@ -6,6 +6,7 @@ use App\Http\Controllers\LoginRegis\RegisterController;
 use App\Http\Controllers\ResourceControllers\MenuController;
 use App\Http\Controllers\ResourceControllers\PesananController;
 use App\Http\Controllers\ResourceControllers\UsersController;
+use App\Models\Users;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -28,6 +29,18 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
         "data" => $request->user(),
     ],200);
 });
+Route::middleware('auth:sanctum')->get('/mini-me', function (Request $request) {
+    $user = new Users((Array)json_decode($request->user()));
+    return response()->json([
+        "status" => 'success',
+        'message' => 'successfully fetched current user',
+        "data" => [
+            "users_nama" => $user->users_nama,
+            "users_role" => $user->users_role,
+            "users_saldo" => $user->users_saldo,
+        ],
+    ],200);
+});
 
 // Tembak dulu sanctum/csrf-cookie untuk dapat csrf token
 // https://laravel.com/docs/9.x/sanctum#cors-and-cookies
@@ -44,8 +57,12 @@ Route::prefix('admin')->group(function () {
 
     // USERS
     Route::prefix('users')->group(function () {
+        ////////////////////////////////////////////////////////////
+        // DEPRECATED ZONE
         Route::get('getAllCustomers', [UsersController::class, 'getAllCustomers']);
         Route::get('getAllProviders', [UsersController::class, 'getAllProviders']);
+        ///////////////////////////////////////////////////////////
+
         Route::patch('banUser/{id}', [UsersController::class, 'banUser']);
         Route::patch('unbanUser/{id}', [UsersController::class, 'unbanUser']);
         Route::patch('approveProvider/{id}', [UsersController::class, 'approveProvider']);
@@ -58,12 +75,20 @@ Route::prefix('admin')->group(function () {
     // https://laravel.com/docs/9.x/controllers#actions-handled-by-resource-controller
 });
 
+// [ ] policy / middleware
+Route::resource('menu', MenuController::class);
+// avaliable actions
+// index, store, show, update, destroy
+
+Route::resource('pesanan', PesananController::class);
+// avaliable actions
+// index, store, show, update, destroy
+
+///////////////////////////////////////////////////////////////
+// DEPRECATED ZONE
+///////////////////////////////////////////////////////////////
 // endpoint providers
 Route::prefix('provider')->group(function () {
-    Route::resource('menu', MenuController::class);
-    // avaliable actions
-    // index, store, show, update, destroy
-
     Route::prefix('pesanan')->group(function () {
         Route::get('getPesananProvider', [PesananController::class, 'getPesananProvider']);
     });
@@ -73,7 +98,3 @@ Route::prefix('provider')->group(function () {
 Route::prefix('customer')->group(function () {
     
 });
-
-Route::resource('pesanan', PesananController::class);
-// avaliable actions
-// index, store, show, update, destroy

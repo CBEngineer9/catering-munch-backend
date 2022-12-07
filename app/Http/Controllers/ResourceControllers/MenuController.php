@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -67,7 +68,7 @@ class MenuController extends Controller
      */
     public function store(Request $request)
     {
-        // TODO upload foto, validation, auth provider only
+        // TODO auth provider only
         $currUser = new Users((Array)json_decode($request->user()));
         $validator = Validator::make($request->all(),[
             'menu_nama' => "required|string",
@@ -165,8 +166,6 @@ class MenuController extends Controller
      */
     public function update(Request $request, $id)
     {
-        return request($id); // BUG no workey
-        return request($request->all());
         $validator = Validator::make($request->all(),[
             'menu_nama' => "nullable|string",
             "menu_foto" => "nullable|file|image|max:4194",
@@ -194,40 +193,43 @@ class MenuController extends Controller
                 $menuTerpilih->$column = $request->$column;
             }
         }
-        if ($request->has('menu_foto')) {// TODO delete old file?
+
+        if ($request->has('menu_foto') && $request->menu_foto != null) {
+            // TODO delete old file? brokey
+            $oldpath = $menuTerpilih->menu_foto;
+            Storage::disk('public')->delete($oldpath);
+            
             $path = $request->menu_foto->store('menu','public');
             $menuTerpilih->menu_foto = $path;
         }
 
-        return response($request->all());
         $edited = "";
         foreach ($request->all() as $req_name => $req_value) {
-            error_log($req_value);
-            $edited .= $req_name . ", ";
+            if ($req_name != "_method") {
+                $edited .= $req_name . ", ";
+            }
         }
         $edited = substr($edited,0,-2);
 
         $hist = new HistoryMenu();
         $hist->history_menu_action = "Edited " . $edited;
         $hist->menu_id = $id;
-
-        return $hist; // TODO
         
-        // DB::beginTransaction();
-        // try {
-        //     $menuTerpilih->save();
-        //     $hist->save();
-        //     DB::commit();
-        // } catch (\Throwable $th) {
-        //     DB::rollback();
-        //     return response()->json([
-        //         'status' => "server error",
-        //         'message' => "mysql error",
-        //         "errors" => [
-        //             'mysql_error' => $th->getMessage()
-        //         ]
-        //     ],500);
-        // }
+        DB::beginTransaction();
+        try {
+            $menuTerpilih->save();
+            $hist->save();
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollback();
+            return response()->json([
+                'status' => "server error",
+                'message' => "mysql error",
+                "errors" => [
+                    'mysql_error' => $th->getMessage()
+                ]
+            ],500);
+        }
 
         return response()->json([
             'status' => 'success',
@@ -243,7 +245,26 @@ class MenuController extends Controller
      */
     public function destroy($id)
     {
-        Menu::destroy($id);
+        $hist = new HistoryMenu();
+        $hist->history_menu_action = "Deleted Menu";
+        $hist->menu_id = $id;
+        
+        DB::beginTransaction();
+        try {
+            Menu::destroy($id);
+            $hist->save();
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollback();
+            return response()->json([
+                'status' => "server error",
+                'message' => "mysql error",
+                "errors" => [
+                    'mysql_error' => $th->getMessage()
+                ]
+            ],500);
+        }
+        
         return response()->json([
             'status' => 'success',
             'message' => 'Successfully deleted menu',
