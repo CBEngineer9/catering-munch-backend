@@ -16,6 +16,16 @@ class HistoryMenu extends Model
         "menu_id"
     ];
 
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'created_at',
+        'updated_at'
+    ];
+
     public function Menu()
     {
         return $this->belongsTo(Menu::class, "menu_id", "menu_id");

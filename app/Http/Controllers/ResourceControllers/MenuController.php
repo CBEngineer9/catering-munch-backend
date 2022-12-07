@@ -3,9 +3,15 @@
 namespace App\Http\Controllers\ResourceControllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\HistoryMenu;
 use App\Models\Menu;
+use App\Models\Users;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class MenuController extends Controller
@@ -15,10 +21,33 @@ class MenuController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $menu = Menu::all()->toArray();
-        return response()->json($menu,200);
+        $new_menu = new Menu();
+        $tablename = $new_menu->getTable();
+        $columns = Schema::getColumnListing($tablename);
+        $request->validate([
+            "provider_id" => "nullable|exists:App\Models\Users,users_id",
+            'sort' => 'nullable',
+            'sort.column' => [ 'nullable' , Rule::in($columns)],
+            'sort.type' => ['nullable', Rule::in(['asc','desc'])],
+            'batch_size' => ["nullable", "integer", "gt:0"],
+        ]);
+
+        $sort_column = $request->sort['column'] ?? "menu_id";
+        $sort_type = $request->sort['type'] ?? "asc";
+        $batch_size = $request->batch_size ?? 10;
+
+        $listMenu = Menu::withTrashed()->orderBy($sort_column,$sort_type);
+        if ($request->has('provider_id')) {
+            $listMenu = $listMenu->where('users_id',$request->provider_id);
+        }
+        $listMenu = $listMenu->paginate($batch_size);
+        return response()->json([
+            'status' => "success",
+            'message' => "successfully fetched menu",
+            'data' => $listMenu
+        ],200);
     }
 
     /**
@@ -39,22 +68,65 @@ class MenuController extends Controller
      */
     public function store(Request $request)
     {
-        // TODO upload foto
-        $menu = $request->validate([
-            'menu_nama' => "string",
-            'menu_foto' => "file|image|max:4194",
-            'menu_harga' => "integer|gte:100",
-            'menu_status' => [Rule::in(['tersedia','tidak tersedia'])],
+        // TODO auth provider only
+        $currUser = new Users((Array)json_decode($request->user()));
+        $validator = Validator::make($request->all(),[
+            'menu_nama' => "required|string",
+            'menu_foto' => "required|file|image|max:4194",
+            'menu_harga' => "required|integer|gte:100",
+            'menu_status' => ["required", Rule::in(['tersedia','tidak tersedia'])],
+            'users_id' => [
+                Rule::prohibitedIf(!$currUser->isAdministrator()), 
+                Rule::requiredIf($currUser->isAdministrator()), 
+                "exists:App\Models\Users,users_id" 
+            ],
         ]);
+        if ($validator->fails()) {
+            return response() ->json([
+                'status' => 'unprocessable content',
+                'message' => 'There are errors found on the data you have entered',
+                'errors' => $validator->errors(),
+            ],422);
+        }
 
-        $curr = $request->user();
-        $menu = new Menu($request->all());
-        $menu->users_id = $curr->users_id;
-        $menu->save();
+        $path = $request->menu_foto->store('menu','public');
+        
+        if ($request->user()->isAdministrator()) {
+            $users_id = $request->users_id;
+        } else if ($request->user()->users_role === 'provider') {
+            $users_id = $request->user()->users_id;
+        } 
+        
+        DB::beginTransaction();
+        try {
+            $menu = new Menu();
+            $menu->menu_nama = $request->menu_nama;
+            $menu->menu_foto = $path;
+            $menu->menu_harga = $request->menu_harga;
+            $menu->menu_status = $request->menu_status;
+            $menu->users_id = $users_id;
+            $menu->save();  // insert menu
+
+            $hist = new HistoryMenu();
+            $hist->history_menu_action = "Created menu";
+            $hist->menu_id = $menu->menu_id;
+            $hist->save();  // insert history
+
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollback();
+            return response()->json([
+                'status' => "server error",
+                'message' => "mysql error",
+                "errors" => [
+                    'mysql_error' => $th->getMessage()
+                ]
+            ],500);
+        }
 
         return response()->json([
             'status' => 'success',
-            'message' => "berhasil tambah menu",
+            'message' => "Successfully added menu",
         ],200);
     }
 
@@ -66,8 +138,12 @@ class MenuController extends Controller
      */
     public function show($id)
     {
-        $menuTerpilih = Menu::find($id)->toArray();
-        return response()->json($menuTerpilih,200);
+        $menuTerpilih = Menu::findOrFail($id)->toArray();
+        return response()->json([
+            "status" => "success",
+            "message" => "successfully fetched menu",
+            "data" => $menuTerpilih
+        ],200);
     }
 
     /**
@@ -90,18 +166,24 @@ class MenuController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(),[
             'menu_nama' => "nullable|string",
             "menu_foto" => "nullable|file|image|max:4194",
             'menu_harga' => "nullable|integer|gte:100",
             "menu_tanggal" => "nullable|date",
             'menu_status' => ["nullable", Rule::in(['tersedia','tidak tersedia'])]
         ]);
+        if ($validator->fails()) {
+            return response() ->json([
+                'status' => 'unprocessable content',
+                'message' => 'There are errors found on the data you have entered',
+                'errors' => $validator->errors(),
+            ],422);
+        }
 
-        $menuTerpilih = Menu::find($id);
+        $menuTerpilih = Menu::findOrFail($id);
         $columns = [
             "menu_nama",
-            "menu_foto",
             "menu_harga",
             "menu_tanggal",
             "menu_status",
@@ -111,11 +193,47 @@ class MenuController extends Controller
                 $menuTerpilih->$column = $request->$column;
             }
         }
-        $menuTerpilih->save();
+
+        if ($request->has('menu_foto') && $request->menu_foto != null) {
+            // TODO delete old file? brokey
+            $oldpath = $menuTerpilih->menu_foto;
+            Storage::disk('public')->delete($oldpath);
+            
+            $path = $request->menu_foto->store('menu','public');
+            $menuTerpilih->menu_foto = $path;
+        }
+
+        $edited = "";
+        foreach ($request->all() as $req_name => $req_value) {
+            if ($req_name != "_method") {
+                $edited .= $req_name . ", ";
+            }
+        }
+        $edited = substr($edited,0,-2);
+
+        $hist = new HistoryMenu();
+        $hist->history_menu_action = "Edited " . $edited;
+        $hist->menu_id = $id;
+        
+        DB::beginTransaction();
+        try {
+            $menuTerpilih->save();
+            $hist->save();
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollback();
+            return response()->json([
+                'status' => "server error",
+                'message' => "mysql error",
+                "errors" => [
+                    'mysql_error' => $th->getMessage()
+                ]
+            ],500);
+        }
 
         return response()->json([
             'status' => 'success',
-            'message' => 'berhasil update'
+            'message' => 'successfully update menu'
         ],200);
     }
 
@@ -127,10 +245,29 @@ class MenuController extends Controller
      */
     public function destroy($id)
     {
-        Menu::destroy($id);
+        $hist = new HistoryMenu();
+        $hist->history_menu_action = "Deleted Menu";
+        $hist->menu_id = $id;
+        
+        DB::beginTransaction();
+        try {
+            Menu::destroy($id);
+            $hist->save();
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollback();
+            return response()->json([
+                'status' => "server error",
+                'message' => "mysql error",
+                "errors" => [
+                    'mysql_error' => $th->getMessage()
+                ]
+            ],500);
+        }
+        
         return response()->json([
             'status' => 'success',
-            'message' => 'menu deleted',
+            'message' => 'Successfully deleted menu',
             'code' => 200
         ],200);
     }

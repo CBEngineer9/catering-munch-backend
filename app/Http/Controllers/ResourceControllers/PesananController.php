@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\ResourceControllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\PemesananResource;
 use App\Models\DetailPemesanan;
 use App\Models\HistoryPemesanan;
 use App\Models\Menu;
@@ -22,7 +23,8 @@ class PesananController extends Controller
      */
     public function __construct()
     {
-        $this->authorizeResource(HistoryPemesanan::class, 'pesanan');
+        // brokey do not use
+        // $this->authorizeResource(HistoryPemesanan::class, 'pesanan');
     }
 
     /**
@@ -32,6 +34,10 @@ class PesananController extends Controller
      */
     public function index(Request $request)
     {
+        // authorize
+        $this->authorize('viewAny', HistoryPemesanan::class);
+
+        // TODO pagination
         $currUser = $request->user();
         if ($currUser->users_role == 'admin') {
             $pemesanan = HistoryPemesanan::all()->toArray();
@@ -84,9 +90,9 @@ class PesananController extends Controller
      */
     public function store(Request $request)
     {
-        // already authorize
+        // authorize
+        $this->authorize('create', HistoryPemesanan::class);
 
-        // TODO store
         $currUser = new Users((Array)json_decode($request->user()));
         $statusList = [
             'belum dikirim',
@@ -95,9 +101,15 @@ class PesananController extends Controller
         ];
         // customer tidak pelu give id
         $validator = Validator::make($request->all(),[
-            "users_customer" => [Rule::requiredIf($currUser->isAdministrator()), "exists:App\Models\Users,users_id"],
+            "pemesanan_id" => "prohibited",
+            "users_customer" => [
+                Rule::prohibitedIf(!$currUser->isAdministrator()), 
+                Rule::requiredIf($currUser->isAdministrator()), 
+                "exists:App\Models\Users,users_id" 
+            ],
             "users_provider" => "required | exists:App\Models\Users,users_id",
             "details" => "required",
+            "details.*.detail_id" => "prohibited",
             "details.*.menu_id" => "required | exists:App\Models\Menu,menu_id",
             "details.*.detail_jumlah" => "required | integer",
             "details.*.detail_tanggal" => "required | date",
@@ -107,8 +119,13 @@ class PesananController extends Controller
                 Rule::in($statusList)
             ],
         ]);
-
-        return $validator->validated(); // BUG required no workey
+        if ($validator->fails()) {
+            return response() ->json([
+                'status' => 'unprocessable content',
+                'message' => 'There are errors found on the data you have entered',
+                'errors' => $validator->errors(),
+            ],422);
+        }
 
         if ($request->user()->isAdministrator()) {
             $users_customer = $request->users_customer;
@@ -125,19 +142,48 @@ class PesananController extends Controller
             $historyPemesanan->users_provider = $request->users_provider;
             $historyPemesanan->users_customer = $users_customer;
             $historyPemesanan->pemesanan_status = 'menunggu';
-            return $historyPemesanan;
+            $historyPemesanan->pemesanan_jumlah = count($details);
+            $historyPemesanan->pemesanan_total = 0;
+            $historyPemesanan->pemesanan_rating = 0;
+            $historyPemesanan->save();
+            
             foreach ($details as $detail) {
-                $menu = Menu::find($detail->menu_id);
+                $menu = Menu::find($detail['menu_id']);
                 $total += $menu->menu_harga;
+                
+                $detail_model = new DetailPemesanan();
+                $detail_model->pemesanan_id = $historyPemesanan->pemesanan_id;
+                $detail_model->menu_id = $detail['menu_id'];
+                $detail_model->detail_jumlah = $detail['detail_jumlah'];
+                $detail_model->detail_total = $detail['detail_jumlah'] * $menu->menu_harga;
+                $detail_model->detail_tanggal = $detail['detail_tanggal'];
+                if ($request->has('detail_status')) {
+                    $status = $request->detail_status;
+                } else {
+                    $status = 'belum dikirim';
+                }
+                $detail_model->detail_status = $status;
+                $detail_model->save();
             }
+            $historyPemesanan->pemesanan_total = $total;
+            $historyPemesanan->save();
+
+            DB::commit();
         } catch (\Throwable $th) {
             DB::rollback();
             return response()->json([
                 'status' => "server error",
                 'message' => "mysql error",
-                "sql_error" => $th->getMessage()
+                "errors" => [
+                    'mysql_error' => $th->getMessage()
+                ]
             ],500);
         }
+
+        return response()->json([
+            'status' => 'created',
+            'message' => 'successfully created pemesanan'
+        ]);
         
     }
 
@@ -149,13 +195,14 @@ class PesananController extends Controller
      */
     public function show($id)
     {
-        // TODO return relation
-        $pemesanan = HistoryPemesanan::findOrFail($id);
+        // authorize
+        $pemesanan = HistoryPemesanan::find($id);
         $this->authorize('view',$pemesanan);
+
         return response()->json([
             'status' => "success",
             'message' => "successfully fetched data",
-            'data' => $pemesanan
+            'data' => new PemesananResource($pemesanan)
         ],200);
     }
 
@@ -178,7 +225,8 @@ class PesananController extends Controller
             // return response()->caps('success');
         } else {
             return response()->json([
-                "status" => "forbidden"
+                "status" => "forbidden",
+                "message" => "You are not permitted to view this resource",
             ],403);
         }
     }
@@ -200,7 +248,8 @@ class PesananController extends Controller
             ],200);
         } else {
             return response()->json([
-                "status" => "forbidden"
+                "status" => "forbidden",
+                "message" => "You are not permitted to view this resource",
             ],403);
         }
     }
@@ -230,9 +279,36 @@ class PesananController extends Controller
         $this->authorize('update',$pesanan);
         // return $request->user()->can('view',HistoryPemesanan::find($id));
         
-        $validator = Validator::make( $request->all(),[
-            ""
+        $currUser = new Users((Array)json_decode($request->user()));
+        $statusList = [
+            'belum dikirim',
+            'terkirim',
+            'diterima'
+        ];
+        $validator = Validator::make($request->all(),[
+            "pemesanan_id" => "prohibited",
+            "users_customer" => ["exists:App\Models\Users,users_id"],
+            "users_provider" => "nullable | exists:App\Models\Users,users_id",
+            "details" => "nullable",
+            "details.*.detail_id" => "prohibited",
+            "details.*.menu_id" => "nullable | exists:App\Models\Menu,menu_id",
+            "details.*.detail_jumlah" => "nullable | integer",
+            "details.*.detail_tanggal" => "nullable | date",
+            "details.*.detail_status" => [
+                Rule::prohibitedIf(!$currUser->isAdministrator()),
+                Rule::in($statusList)
+            ],
         ]);
+        
+        if ($validator->fails()) {
+            return response() ->json([
+                'status' => 'unprocessable content',
+                'message' => 'There are errors found on the data you have entered',
+                'errors' => $validator->errors(),
+            ],422);
+        }
+        // drop then insert? upsert?
+        // check status
     }
 
     /**

@@ -17,6 +17,16 @@ class DetailPemesanan extends Model
         "detail_jumlah",
         "detail_total",
     ];
+    
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'created_at',
+        'updated_at'
+    ];
 
     public function Menu()
     {

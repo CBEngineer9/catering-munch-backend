@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('history_menu_action');
             $table->unsignedBigInteger('menu_id');
             $table->foreign('menu_id')->references('menu_id')->on('menu');
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
     }
 

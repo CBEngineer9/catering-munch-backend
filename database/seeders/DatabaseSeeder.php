@@ -72,8 +72,9 @@ class DatabaseSeeder extends Seeder
                 ->for($provider, 'UsersProvider')
                 ->has(DetailPemesanan::factory()->forProvider($provider)->count(5))
                 ->create();
-
         }
+        // [ ] History Log
+        // [ ] History Menu
 
     }
 }
