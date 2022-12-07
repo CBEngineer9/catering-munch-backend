@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +27,9 @@ class Users extends Authenticatable
         'users_role',
         'users_status'
     ];
+    protected $appends = [
+        'users_rating'
+    ];
 
      /**
      * The attributes that should be hidden for serialization.
@@ -38,6 +42,24 @@ class Users extends Authenticatable
         'updated_at',
         'deleted_at'
     ];
+
+    protected function usersRating(): Attribute
+    {
+        return new Attribute(
+            get: function() {
+                if ($this->users_role !== 'provider') {
+                    return null;
+                } else {
+                    return HistoryPemesanan::where('users_provider',$this->users_id)->average('pemesanan_rating');
+                }
+            }
+        );
+    }
+
+    // public function getUsersRatingAttribute()
+    // {
+    //     return HistoryPemesanan::where('users_provider',$this->users_id)->average('pemesanan_rating');
+    // }
 
     public function getAuthPassword()
     {

@@ -23,6 +23,9 @@ class MenuController extends Controller
      */
     public function index(Request $request)
     {
+        // authorization
+        $this->authorize('viewAny', Menu::class);
+
         $new_menu = new Menu();
         $tablename = $new_menu->getTable();
         $columns = Schema::getColumnListing($tablename);
@@ -68,7 +71,9 @@ class MenuController extends Controller
      */
     public function store(Request $request)
     {
-        // TODO auth provider only
+        // authorization
+        $this->authorize('create', Menu::class);
+
         $currUser = new Users((Array)json_decode($request->user()));
         $validator = Validator::make($request->all(),[
             'menu_nama' => "required|string",
@@ -138,6 +143,10 @@ class MenuController extends Controller
      */
     public function show($id)
     {
+        // authorize
+        $menu = Menu::find($id);
+        $this->authorize('view',$menu);
+
         $menuTerpilih = Menu::findOrFail($id)->toArray();
         return response()->json([
             "status" => "success",
@@ -166,6 +175,10 @@ class MenuController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // authorize
+        $menu = Menu::find($id);
+        $this->authorize('update',$menu);
+        
         $validator = Validator::make($request->all(),[
             'menu_nama' => "nullable|string",
             "menu_foto" => "nullable|file|image|max:4194",
@@ -195,10 +208,11 @@ class MenuController extends Controller
         }
 
         if ($request->has('menu_foto') && $request->menu_foto != null) {
-            // TODO delete old file? brokey
+            // delete old file
             $oldpath = $menuTerpilih->menu_foto;
             Storage::disk('public')->delete($oldpath);
             
+            // add new path
             $path = $request->menu_foto->store('menu','public');
             $menuTerpilih->menu_foto = $path;
         }
@@ -245,6 +259,10 @@ class MenuController extends Controller
      */
     public function destroy($id)
     {
+        // authorize
+        $menu = Menu::find($id);
+        $this->authorize('delete',$menu);
+        
         $hist = new HistoryMenu();
         $hist->history_menu_action = "Deleted Menu";
         $hist->menu_id = $id;
@@ -267,7 +285,7 @@ class MenuController extends Controller
         
         return response()->json([
             'status' => 'success',
-            'message' => 'Successfully deleted menu',
+            'message' => 'successfully deleted menu',
             'code' => 200
         ],200);
     }

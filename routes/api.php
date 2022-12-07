@@ -75,7 +75,11 @@ Route::prefix('admin')->group(function () {
     // https://laravel.com/docs/9.x/controllers#actions-handled-by-resource-controller
 });
 
-// [ ] policy / middleware
+// [x] policy / middleware
+// [x] provider menunggu = customer
+Route::prefix('menu')->group(function () {
+    Route::patch('/{id}/rate', [PesananController::class, 'rate']);
+});
 Route::resource('menu', MenuController::class);
 // avaliable actions
 // index, store, show, update, destroy

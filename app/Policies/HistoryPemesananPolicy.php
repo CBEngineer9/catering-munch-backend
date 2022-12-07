@@ -21,7 +21,6 @@ class HistoryPemesananPolicy
     public function before(Users $user, $ability)
     {
         if ($user->isAdministrator()) {
-            error_log('admin access pemesanan'); // TODO remove this
             return true;
         }
     }
@@ -81,6 +80,20 @@ class HistoryPemesananPolicy
     }
 
     /**
+     * Determine whether the user can update the model.
+     *
+     * @param  \App\Models\Users  $users
+     * @param  \App\Models\HistoryPemesanan  $historyPemesanan
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function rate(Users $users, HistoryPemesanan $historyPemesanan)
+    {
+        return $users->users_id === $historyPemesanan->users_customer 
+            ? Response::allow()
+            : Response::deny('You cannot rate this pesanan.');
+    }
+
+    /**
      * Determine whether the user can delete the model.
      *
      * @param  \App\Models\Users  $users
@@ -104,7 +117,10 @@ class HistoryPemesananPolicy
      */
     public function restore(Users $users, HistoryPemesanan $historyPemesanan)
     {
-        return Response::allow();
+        return $users->users_id === $historyPemesanan->users_customer 
+            || $users->users_id === $historyPemesanan->users_provider
+            ? Response::allow()
+            : Response::deny('You do not own this resource.');
     }
 
     /**

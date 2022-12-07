@@ -155,7 +155,11 @@ class UsersController extends Controller
     public function show($id)
     {
         $user = Users::withTrashed()->findOrFail($id);
-        return response()->json($user,200);
+        return response()->json([
+            "status" => "success",
+            "message" => "successfully fetched user",
+            "data" => $user
+        ],200);
     }
 
     /**
