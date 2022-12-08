@@ -17,6 +17,7 @@ class OrderMade extends Mailable
 
     /** @var App\Models\HistoryPemesanan $historyPemesanan Header pesanan to send */
     protected $historyPemesanan;
+
     /**
      * Create a new message instance.
      *
@@ -49,7 +50,7 @@ class OrderMade extends Mailable
     public function content()
     {
         return new Content(
-            view: 'view.name',
+            view: 'Mail.orderMade',
         );
     }
 

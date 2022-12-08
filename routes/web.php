@@ -4,8 +4,10 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\WebControllers\LoginController;
 use App\Http\Controllers\WebControllers\RegisterController;
 use App\Models\HistoryLog;
+use App\Models\HistoryPemesanan;
 use App\Models\Menu;
 use App\Models\Users;
+use App\Notifications\OrderMadeNotif;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +22,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Route::get('/notiftest', function () {
+//     $historyPemesanan = HistoryPemesanan::find(1);
+//     return (new OrderMadeNotif($historyPemesanan))
+//         ->toMail($historyPemesanan->UsersCustomer);
+// });
 
 
 //LOGOUT

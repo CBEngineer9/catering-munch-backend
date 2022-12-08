@@ -100,7 +100,21 @@ class HistoryPemesananPolicy
      * @param  \App\Models\HistoryPemesanan  $historyPemesanan
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function tolak(Users $users, HistoryPemesanan $historyPemesanan)
+    public function accept(Users $users, HistoryPemesanan $historyPemesanan)
+    {
+        return $users->users_id === $historyPemesanan->users_provider
+            ? Response::allow()
+            : Response::deny('You cannot accept this order.');
+    }
+
+    /**
+     * Determine whether the user can reject pemesanan
+     *
+     * @param  \App\Models\Users  $users
+     * @param  \App\Models\HistoryPemesanan  $historyPemesanan
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function reject(Users $users, HistoryPemesanan $historyPemesanan)
     {
         return $users->users_id === $historyPemesanan->users_provider
             ? Response::allow()
