@@ -10,7 +10,7 @@ class DetailPemesanan extends Model
     use HasFactory;
 
     protected $table = "detail_pemesanan";
-    protected $primaryKey = "datail_id";
+    protected $primaryKey = "detail_id";
     protected $fillable = [
         "pemesanan_id",
         "menu_id",

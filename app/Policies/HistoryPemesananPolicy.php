@@ -52,6 +52,20 @@ class HistoryPemesananPolicy
     }
 
     /**
+     * Determine whether the user can view the model.
+     *
+     * @param  \App\Models\Users  $users
+     * @param  \App\Models\HistoryPemesanan  $historyPemesanan
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function viewDelivery(Users $users)
+    {
+        return $users->users_role === 'provider'
+        ? Response::allow()
+        : Response::deny('You cannot view this resource.');
+    }
+
+    /**
      * Determine whether the user can create models.
      *
      * @param  \App\Models\Users  $users
@@ -77,6 +91,48 @@ class HistoryPemesananPolicy
             || $users->users_id === $historyPemesanan->users_provider
             ? Response::allow()
             : Response::deny('You do not own this resource.');
+    }
+
+    /**
+     * Determine whether the user can reject pemesanan
+     *
+     * @param  \App\Models\Users  $users
+     * @param  \App\Models\HistoryPemesanan  $historyPemesanan
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function tolak(Users $users, HistoryPemesanan $historyPemesanan)
+    {
+        return $users->users_id === $historyPemesanan->users_provider
+            ? Response::allow()
+            : Response::deny('You cannot reject this order.');
+    }
+
+    /**
+     * Determine whether the user can deliver pemesanan
+     *
+     * @param  \App\Models\Users  $users
+     * @param  \App\Models\HistoryPemesanan  $historyPemesanan
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function kirim(Users $users, HistoryPemesanan $historyPemesanan)
+    {
+        return $users->users_id === $historyPemesanan->users_provider
+            ? Response::allow()
+            : Response::deny('You cannot deliver this order.');
+    }
+
+    /**
+     * Determine whether the user can receive pemesanan
+     *
+     * @param  \App\Models\Users  $users
+     * @param  \App\Models\HistoryPemesanan  $historyPemesanan
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function terima(Users $users, HistoryPemesanan $historyPemesanan)
+    {
+        return $users->users_id === $historyPemesanan->users_customer
+            ? Response::allow()
+            : Response::deny('You cannot receive this order.');
     }
 
     /**
