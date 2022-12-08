@@ -92,9 +92,10 @@ Route::resource('menu', MenuController::class);
 
 Route::prefix('pesanan')->group(function () {
     Route::get('showDelivery', [PesananController::class,'showDelivery']);
-    Route::post('{id}/tolak', [PesananController::class,'tolak']);
-    Route::post('kirim/{detail_id}', [PesananController::class,'kirim']);
-    Route::post('terima/{detail_id}', [PesananController::class,'terima']);
+    Route::post('{id}/reject', [PesananController::class,'tolak']);
+    Route::post('deliver/{detail_id}', [PesananController::class,'kirim']);
+    Route::post('receive/{detail_id}', [PesananController::class,'terima']);
+    // TODO approve?
 });
 Route::resource('pesanan', PesananController::class);
 // avaliable actions
