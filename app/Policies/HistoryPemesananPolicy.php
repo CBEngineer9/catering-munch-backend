@@ -21,7 +21,6 @@ class HistoryPemesananPolicy
     public function before(Users $user, $ability)
     {
         if ($user->isAdministrator()) {
-            error_log('admin access pemesanan'); // TODO remove this
             return true;
         }
     }
@@ -53,6 +52,20 @@ class HistoryPemesananPolicy
     }
 
     /**
+     * Determine whether the user can view the model.
+     *
+     * @param  \App\Models\Users  $users
+     * @param  \App\Models\HistoryPemesanan  $historyPemesanan
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function viewDelivery(Users $users)
+    {
+        return $users->users_role === 'provider'
+        ? Response::allow()
+        : Response::deny('You cannot view this resource.');
+    }
+
+    /**
      * Determine whether the user can create models.
      *
      * @param  \App\Models\Users  $users
@@ -81,6 +94,62 @@ class HistoryPemesananPolicy
     }
 
     /**
+     * Determine whether the user can reject pemesanan
+     *
+     * @param  \App\Models\Users  $users
+     * @param  \App\Models\HistoryPemesanan  $historyPemesanan
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function tolak(Users $users, HistoryPemesanan $historyPemesanan)
+    {
+        return $users->users_id === $historyPemesanan->users_provider
+            ? Response::allow()
+            : Response::deny('You cannot reject this order.');
+    }
+
+    /**
+     * Determine whether the user can deliver pemesanan
+     *
+     * @param  \App\Models\Users  $users
+     * @param  \App\Models\HistoryPemesanan  $historyPemesanan
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function kirim(Users $users, HistoryPemesanan $historyPemesanan)
+    {
+        return $users->users_id === $historyPemesanan->users_provider
+            ? Response::allow()
+            : Response::deny('You cannot deliver this order.');
+    }
+
+    /**
+     * Determine whether the user can receive pemesanan
+     *
+     * @param  \App\Models\Users  $users
+     * @param  \App\Models\HistoryPemesanan  $historyPemesanan
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function terima(Users $users, HistoryPemesanan $historyPemesanan)
+    {
+        return $users->users_id === $historyPemesanan->users_customer
+            ? Response::allow()
+            : Response::deny('You cannot receive this order.');
+    }
+
+    /**
+     * Determine whether the user can update the model.
+     *
+     * @param  \App\Models\Users  $users
+     * @param  \App\Models\HistoryPemesanan  $historyPemesanan
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function rate(Users $users, HistoryPemesanan $historyPemesanan)
+    {
+        return $users->users_id === $historyPemesanan->users_customer 
+            ? Response::allow()
+            : Response::deny('You cannot rate this pesanan.');
+    }
+
+    /**
      * Determine whether the user can delete the model.
      *
      * @param  \App\Models\Users  $users
@@ -104,7 +173,10 @@ class HistoryPemesananPolicy
      */
     public function restore(Users $users, HistoryPemesanan $historyPemesanan)
     {
-        return Response::allow();
+        return $users->users_id === $historyPemesanan->users_customer 
+            || $users->users_id === $historyPemesanan->users_provider
+            ? Response::allow()
+            : Response::deny('You do not own this resource.');
     }
 
     /**

@@ -26,7 +26,9 @@ class UsersController extends Controller
             'sort.column' => [ 'required_with:sort.type' , Rule::in($columns)],
             'sort.type' => ['required_with:sort.column', Rule::in(['asc','desc'])],
             'batch_size' => ["integer", "gt:0"],
-            "role" => ['nullable', Rule::in(['admin','customer','provider'])]
+            "users_role" => ['nullable', Rule::in(['admin','customer','provider'])],
+            "users_status" => ['nullable', Rule::in(['banned', 'aktif', 'menunggu'])],
+            "users_nama" => ['nullable', "string"],
         ]);
 
         $sort_column = $request->sort['column'] ?? "users_id";
@@ -34,8 +36,14 @@ class UsersController extends Controller
         $batch_size = $request->batch_size ?? 10;
 
         $listUser = Users::withTrashed()->orderBy($sort_column,$sort_type);
-        if ($request->has('role')) {
-            $listUser = $listUser->where('users_role',$request->role);
+        if ($request->has('users_role')) {
+            $listUser = $listUser->where('users_role',$request->users_role);
+        }
+        if ($request->has('users_status')) {
+            $listUser = $listUser->where('users_status',$request->users_status);
+        }
+        if ($request->has('users_nama')) {
+            $listUser = $listUser->where('users_nama','like','%'.$request->users_nama.'%');
         }
         $listUser = $listUser->paginate($batch_size);
         return response()->json([
@@ -155,7 +163,11 @@ class UsersController extends Controller
     public function show($id)
     {
         $user = Users::withTrashed()->findOrFail($id);
-        return response()->json($user,200);
+        return response()->json([
+            "status" => "success",
+            "message" => "successfully fetched user",
+            "data" => $user
+        ],200);
     }
 
     /**

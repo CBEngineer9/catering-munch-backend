@@ -11,6 +11,7 @@ use App\Models\Users;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -37,17 +38,32 @@ class PesananController extends Controller
         // authorize
         $this->authorize('viewAny', HistoryPemesanan::class);
 
-        // TODO pagination
+        $new_menu = new HistoryPemesanan();
+        $tablename = $new_menu->getTable();
+        $columns = Schema::getColumnListing($tablename);
+        $request->validate([
+            'sort' => 'nullable',
+            'sort.column' => [ 'nullable' , Rule::in($columns)],
+            'sort.type' => ['nullable', Rule::in(['asc','desc'])],
+            'batch_size' => ["nullable", "integer", "gt:0"],
+        ]);
+
+        $sort_column = $request->sort['column'] ?? "pemesanan_id";
+        $sort_type = $request->sort['type'] ?? "asc";
+        $batch_size = $request->batch_size ?? 10;
+
         $currUser = $request->user();
         if ($currUser->users_role == 'admin') {
-            $pemesanan = HistoryPemesanan::all()->toArray();
+            $pemesanan = HistoryPemesanan::orderBy($sort_column,$sort_type)->paginate($batch_size);
             return response()->json([
                 'status' => "success",
                 'message' => "successfully fetched all data",
                 'data' => $pemesanan
             ],200);
         } else if ($currUser->users_role == "provider") {
-            $pemesanan = HistoryPemesanan::where("users_provider",$currUser->users_id)->get()->toArray();
+            $pemesanan = HistoryPemesanan::where("users_provider",$currUser->users_id)
+                ->orderBy($sort_column,$sort_type)
+                ->paginate($batch_size);
             return response()->json([
                 "status" => "success",
                 "message" => "successfuly fetched pemesanan provider",
@@ -56,7 +72,9 @@ class PesananController extends Controller
             // return response()->dro('success',200,'successfuly fetched pemesanan',$pemesanan);
             // return response()->caps('success');
         } else if ($currUser->users_role == "customer") {
-            $pemesanan = HistoryPemesanan::where("users_customer",$currUser->users_id)->get()->toArray();
+            $pemesanan = HistoryPemesanan::where("users_customer",$currUser->users_id)
+            ->orderBy($sort_column,$sort_type)
+            ->paginate($batch_size);
             return response()->json([
                 "status" => "success",
                 "message" => "successfuly fetched pemesanan customer",
@@ -207,6 +225,121 @@ class PesananController extends Controller
     }
 
     /**
+     * Display pemesanan details.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function showDelivery(Request $request)
+    {
+        // authorize
+        $this->authorize('viewDelivery',HistoryPemesanan::class);
+
+        $validator = Validator::make($request->all(),[
+            "month" => ["required_with:year","gte:1","lte:12"],
+            "year" => ["required_with:month","gt:2010", "lt:3000"]
+        ]);
+        if ($validator->fails()) {
+            return response() ->json([
+                'status' => 'unprocessable content',
+                'message' => 'There are errors found on the data you have entered',
+                'errors' => $validator->errors(),
+            ],422);
+        }
+
+        if ($request->has('month') && $request->has('year')) {
+            $year = $request->year;
+            $month = $request->month;
+        } else {
+            $year =  date("Y");
+            $month =  date("m");
+        }
+
+        $user = $request->user();
+
+        $thismonth = DetailPemesanan::whereRelation('HistoryPemesanan', 'users_provider', $user->users_id)
+            ->whereMonth('detail_tanggal',$month)->whereYear('detail_tanggal',$year)
+            ->with([
+                    'HistoryPemesanan:pemesanan_id,users_customer,users_provider' => [
+                        'UsersCustomer:users_id,users_nama,users_alamat'
+                    ],
+                    'Menu'
+                ])
+            ->get();
+
+        return response()->json([
+            'status' => "success",
+            'message' => "successfully fetched data",
+            'data' => $thismonth
+        ],200);
+    }
+
+    /**
+     * Set reject history pemesanan
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     **/
+    public function tolak($id)
+    {
+        // authorize
+        $pemesananTerpilih = HistoryPemesanan::findOrFail($id);
+        $this->authorize('tolak',$pemesananTerpilih);
+
+        $pemesananTerpilih->pemesanan_status = 'ditolak';
+        $pemesananTerpilih->save();
+
+        return response()->json([
+            'status' => "success",
+            'message' => "successfully changed pesanan status to delivered",
+        ],200);
+    }
+
+    /**
+     * Set detail pemesanan status to terkirim
+     *
+     * @param  int  $detail_id
+     * @return \Illuminate\Http\Response
+     **/
+    public function kirim($detail_id)
+    {
+        // authhorize
+        $detailTerpilih = DetailPemesanan::findOrFail($detail_id);
+        $headerTerpilih = $detailTerpilih->HistoryPemesanan()->first();
+        $this->authorize('kirim',$headerTerpilih);
+
+        $detailTerpilih->detail_status = 'terkirim';
+        $detailTerpilih->save();
+
+        return response()->json([
+            'status' => "success",
+            'message' => "successfully changed pesanan status to delivered",
+        ],200);
+    }
+
+    /**
+     * Set detail pemesanan status to diterima
+     *
+     * @param  int  $detail_id
+     * @return \Illuminate\Http\Response
+     **/
+    public function terima($detail_id)
+    {
+        // authorize
+        $detailTerpilih = DetailPemesanan::findOrFail($detail_id);
+        $headerTerpilih = $detailTerpilih->HistoryPemesanan()->first();
+        $this->authorize('terima',$headerTerpilih);
+
+        $detailTerpilih->detail_status = 'diterima';
+        $detailTerpilih->save();
+
+        return response()->json([
+            'status' => "success",
+            'message' => "successfully changed pesanan status to received",
+        ],200);
+    }
+
+    /**
      * Get all pesanan to currently logged on provider
      *
      * @return \Illuminate\Http\Response
@@ -312,6 +445,40 @@ class PesananController extends Controller
     }
 
     /**
+     * Rate pemesanan
+     *
+     * @param $id Pemesanan id
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     **/
+    public function rate(Request $request, $id)
+    {
+        // TODO where to display
+        $pemesananTerpilih = HistoryPemesanan::findOrFail($id);
+        $this->authorize('rate',$pemesananTerpilih);
+
+        $validator = Validator::make($request->all(),[
+            "rating" => ["required", "integer", "gt:0", "lte:10"]
+        ]);
+        if ($validator->fails()) {
+            return response() ->json([
+                'status' => 'unprocessable content',
+                'message' => 'There are errors found on the data you have entered',
+                'errors' => $validator->errors(),
+            ],422);
+        }
+
+        // all good
+        $pemesananTerpilih->pemesanan_rating = $request->rating;
+        $pemesananTerpilih->save();
+
+        return response()->json([
+            "status" => "success",
+            "message" => "successfuly rate pemesanan",
+        ],200);
+    }
+
+    /**
      * Remove the specified resource from storage.
      *
      * @param  int  $id
@@ -319,7 +486,7 @@ class PesananController extends Controller
      */
     public function destroy($id)
     {
-        $pesanan = HistoryPemesanan::find($id);
+        $pesanan = HistoryPemesanan::findOrFail($id);
         $this->authorize('delete',$pesanan);
 
         DetailPemesanan::where("pemesanan_id",$id)->delete();

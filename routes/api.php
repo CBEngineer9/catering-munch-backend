@@ -69,17 +69,34 @@ Route::prefix('admin')->group(function () {
         Route::delete('purge/{id}', [UsersController::class, 'purge']);
         Route::post('restore/{id}', [UsersController::class, 'restore']);
     });
-    Route::resource('users', UsersController::class);
+    Route::resource('users', UsersController::class)
+        ->missing(function (Request $request) {
+            return response()->json([
+                'status' => 'not found',
+                'message' => 'we cannot find that resource'
+            ],404);
+        });
     // avaliable actions
     // index, store, show, update, destroy
     // https://laravel.com/docs/9.x/controllers#actions-handled-by-resource-controller
 });
 
-// [ ] policy / middleware
+// [x] policy / middleware
+// [x] provider menunggu = customer
+Route::prefix('menu')->group(function () {
+    Route::patch('/{id}/rate', [PesananController::class, 'rate']);
+});
 Route::resource('menu', MenuController::class);
 // avaliable actions
 // index, store, show, update, destroy
 
+Route::prefix('pesanan')->group(function () {
+    Route::get('showDelivery', [PesananController::class,'showDelivery']);
+    Route::post('{id}/reject', [PesananController::class,'tolak']);
+    Route::post('deliver/{detail_id}', [PesananController::class,'kirim']);
+    Route::post('receive/{detail_id}', [PesananController::class,'terima']);
+    // TODO approve?
+});
 Route::resource('pesanan', PesananController::class);
 // avaliable actions
 // index, store, show, update, destroy
