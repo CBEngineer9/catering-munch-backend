@@ -8,6 +8,7 @@ use App\Models\DetailPemesanan;
 use App\Models\HistoryPemesanan;
 use App\Models\Menu;
 use App\Models\Users;
+use App\Notifications\OrderMadeNotif;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -197,6 +198,9 @@ class PesananController extends Controller
                 ]
             ],500);
         }
+        
+        $provider = Users::find($request->users_provider);
+        $provider->notify(new OrderMadeNotif($historyPemesanan));
 
         return response()->json([
             'status' => 'created',
@@ -256,35 +260,60 @@ class PesananController extends Controller
         }
 
         $user = $request->user();
-
-        $thismonth = DetailPemesanan::whereRelation('HistoryPemesanan', 'users_provider', $user->users_id)
-            ->whereMonth('detail_tanggal',$month)->whereYear('detail_tanggal',$year)
+        $thismonth = DetailPemesanan::whereMonth('detail_tanggal',$month)->whereYear('detail_tanggal',$year)
             ->with([
                     'HistoryPemesanan:pemesanan_id,users_customer,users_provider' => [
                         'UsersCustomer:users_id,users_nama,users_alamat'
                     ],
                     'Menu'
                 ])
-            ->get();
+            ;
+
+        if ($user->users_role == 'provider') {
+            $thismonth = $thismonth->whereRelation('HistoryPemesanan', 'users_provider', $user->users_id);
+        } else if ($user->users_role === 'customer') {
+            $thismonth = $thismonth->whereRelation('HistoryPemesanan', 'users_customer', $user->users_id);
+        } 
 
         return response()->json([
             'status' => "success",
             'message' => "successfully fetched data",
-            'data' => $thismonth
+            'data' => $thismonth->get()
         ],200);
     }
 
     /**
-     * Set reject history pemesanan
+     * accept history pemesanan
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
      **/
-    public function tolak($id)
+    public function accept($id)
     {
         // authorize
         $pemesananTerpilih = HistoryPemesanan::findOrFail($id);
-        $this->authorize('tolak',$pemesananTerpilih);
+        $this->authorize('accept',$pemesananTerpilih);
+
+        $pemesananTerpilih->pemesanan_status = 'diterima';
+        $pemesananTerpilih->save();
+
+        return response()->json([
+            'status' => "success",
+            'message' => "successfully changed pesanan status to delivered",
+        ],200);
+    }
+
+    /**
+     * reject history pemesanan
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     **/
+    public function reject($id)
+    {
+        // authorize
+        $pemesananTerpilih = HistoryPemesanan::findOrFail($id);
+        $this->authorize('reject',$pemesananTerpilih);
 
         $pemesananTerpilih->pemesanan_status = 'ditolak';
         $pemesananTerpilih->save();

@@ -35,6 +35,7 @@ Route::middleware('auth:sanctum')->get('/mini-me', function (Request $request) {
         "status" => 'success',
         'message' => 'successfully fetched current user',
         "data" => [
+            "users_id" => $user->users_id,
             "users_nama" => $user->users_nama,
             "users_role" => $user->users_role,
             "users_saldo" => $user->users_saldo,
@@ -83,6 +84,8 @@ Route::prefix('admin')->group(function () {
 
 // [x] policy / middleware
 // [x] provider menunggu = customer
+// [ ] history menu
+// [ ] history log
 Route::prefix('menu')->group(function () {
     Route::patch('/{id}/rate', [PesananController::class, 'rate']);
 });
@@ -92,10 +95,10 @@ Route::resource('menu', MenuController::class);
 
 Route::prefix('pesanan')->group(function () {
     Route::get('showDelivery', [PesananController::class,'showDelivery']);
-    Route::post('{id}/reject', [PesananController::class,'tolak']);
+    Route::post('{id}/reject', [PesananController::class,'reject']);
+    Route::post('{id}/accept', [PesananController::class,'accept']);
     Route::post('deliver/{detail_id}', [PesananController::class,'kirim']);
     Route::post('receive/{detail_id}', [PesananController::class,'terima']);
-    // TODO approve?
 });
 Route::resource('pesanan', PesananController::class);
 // avaliable actions
