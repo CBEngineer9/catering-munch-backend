@@ -17,8 +17,9 @@ return new class extends Migration
             $table->id('log_id');
             $table->string('log_title');
             $table->string('log_desc');
-            $table->dateTime('log_datetime');
             $table->unsignedBigInteger('users_id');
+            $table->timestamp('log_timestamp')->useCurrent()->useCurrentOnUpdate();
+            
             $table->foreign('users_id')->references('users_id')->on('users');
         });
     }

@@ -83,6 +83,8 @@ Route::prefix('admin')->group(function () {
 
 // [x] policy / middleware
 // [x] provider menunggu = customer
+// [ ] history menu
+// [ ] history log
 Route::prefix('menu')->group(function () {
     Route::patch('/{id}/rate', [PesananController::class, 'rate']);
 });
