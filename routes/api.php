@@ -35,6 +35,7 @@ Route::middleware('auth:sanctum')->get('/mini-me', function (Request $request) {
         "status" => 'success',
         'message' => 'successfully fetched current user',
         "data" => [
+            "users_id" => $user->users_id,
             "users_nama" => $user->users_nama,
             "users_role" => $user->users_role,
             "users_saldo" => $user->users_saldo,
