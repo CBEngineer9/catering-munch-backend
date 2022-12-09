@@ -8,10 +8,11 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Queue\SerializesModels;
 
-class OrderMadeNotif extends Notification
+class OrderMadeNotif extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, SerializesModels;
 
     /** @var App\Models\HistoryPemesanan $historyPemesanan Header pesanan to send */
     protected $historyPemesanan;

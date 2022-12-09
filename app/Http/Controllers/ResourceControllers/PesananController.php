@@ -260,21 +260,25 @@ class PesananController extends Controller
         }
 
         $user = $request->user();
-
-        $thismonth = DetailPemesanan::whereRelation('HistoryPemesanan', 'users_provider', $user->users_id)
-            ->whereMonth('detail_tanggal',$month)->whereYear('detail_tanggal',$year)
+        $thismonth = DetailPemesanan::whereMonth('detail_tanggal',$month)->whereYear('detail_tanggal',$year)
             ->with([
                     'HistoryPemesanan:pemesanan_id,users_customer,users_provider' => [
                         'UsersCustomer:users_id,users_nama,users_alamat'
                     ],
                     'Menu'
                 ])
-            ->get();
+            ;
+
+        if ($user->users_role == 'provider') {
+            $thismonth = $thismonth->whereRelation('HistoryPemesanan', 'users_provider', $user->users_id);
+        } else if ($user->users_role === 'customer') {
+            $thismonth = $thismonth->whereRelation('HistoryPemesanan', 'users_customer', $user->users_id);
+        } 
 
         return response()->json([
             'status' => "success",
             'message' => "successfully fetched data",
-            'data' => $thismonth
+            'data' => $thismonth->get()
         ],200);
     }
 
