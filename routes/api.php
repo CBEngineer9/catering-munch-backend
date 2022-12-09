@@ -30,7 +30,8 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
     ],200);
 });
 Route::middleware('auth:sanctum')->get('/mini-me', function (Request $request) {
-    $user = new Users((Array)json_decode($request->user()));
+    // $user = new Users((Array)json_decode($request->user()));
+    $user = $request->user();
     return response()->json([
         "status" => 'success',
         'message' => 'successfully fetched current user',
