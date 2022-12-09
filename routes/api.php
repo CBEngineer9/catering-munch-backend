@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\HistoryController;
 use App\Http\Controllers\LoginRegis\LoginController;
 use App\Http\Controllers\LoginRegis\RegisterController;
+use App\Http\Controllers\ResourceControllers\HistoryMenuController;
 use App\Http\Controllers\ResourceControllers\MenuController;
 use App\Http\Controllers\ResourceControllers\PesananController;
 use App\Http\Controllers\ResourceControllers\UsersController;
@@ -21,6 +22,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// FIXME put role middleware 
+// [x] policy / middleware
+// [x] provider menunggu = customer
+// [x] history menu
+// [ ] history log
+
+// USER UTILITY //////////////////////////////////////////////////////////////
 // untuk cek siapa yang login
 Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
     return response()->json([
@@ -51,13 +59,9 @@ Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/register', [RegisterController::class, 'register'])->name('register');
 Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'logout']);
 
-// FIXME put role middleware 
 // endpoint admin
 Route::prefix('admin')->group(function () {
-    //HISTORY
-    Route::resource('history', HistoryController::class);
-
-    // USERS
+    // USERS ///////////////////////////////////////////////////////////
     Route::prefix('users')->group(function () {
         ////////////////////////////////////////////////////////////
         // DEPRECATED ZONE
@@ -83,10 +87,7 @@ Route::prefix('admin')->group(function () {
     // https://laravel.com/docs/9.x/controllers#actions-handled-by-resource-controller
 });
 
-// [x] policy / middleware
-// [x] provider menunggu = customer
-// [ ] history menu
-// [ ] history log
+// MENU ////////////////////////////////////////////////////////////////////////
 Route::prefix('menu')->group(function () {
     Route::patch('/{id}/rate', [PesananController::class, 'rate']);
 });
@@ -94,6 +95,14 @@ Route::resource('menu', MenuController::class);
 // avaliable actions
 // index, store, show, update, destroy
 
+
+// HISTORY MENU ////////////////////////////////////////////////////////////////
+Route::resource('historyMenu', HistoryMenuController::class);
+// avaliable actions
+// index
+
+
+// PESANAN /////////////////////////////////////////////////////////////////////
 Route::prefix('pesanan')->group(function () {
     Route::get('showDelivery', [PesananController::class,'showDelivery']);
     Route::post('{id}/reject', [PesananController::class,'reject']);
@@ -104,6 +113,10 @@ Route::prefix('pesanan')->group(function () {
 Route::resource('pesanan', PesananController::class);
 // avaliable actions
 // index, store, show, update, destroy
+
+
+
+
 
 ///////////////////////////////////////////////////////////////
 // DEPRECATED ZONE

@@ -49,7 +49,7 @@ class Menu extends Model
         return $this->hasMany(DetailPemesanan::class, "menu_id", "menu_id");
     }
 
-    public function history_menu()
+    public function HistoryMenu()
     {
         return $this->hasMany(HistoryMenu::class, "menu_id", "menu_id");
     }

@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\HistoryMenu;
 use App\Models\Menu;
 use App\Models\Users;
+use App\Rules\UserRoleRule;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -30,7 +30,7 @@ class MenuController extends Controller
         $tablename = $new_menu->getTable();
         $columns = Schema::getColumnListing($tablename);
         $request->validate([
-            "provider_id" => "nullable|exists:App\Models\Users,users_id",
+            "provider_id" => ["nullable", "exists:App\Models\Users,users_id", new UserRoleRule("provider")],
             'sort' => 'nullable',
             'sort.column' => [ 'nullable' , Rule::in($columns)],
             'sort.type' => ['nullable', Rule::in(['asc','desc'])],
