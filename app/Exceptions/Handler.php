@@ -2,7 +2,9 @@
 
 namespace App\Exceptions;
 
+use App\Helpers\LogHelper;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use PDOException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -44,7 +46,10 @@ class Handler extends ExceptionHandler
     public function register()
     {
         $this->reportable(function (Throwable $e) {
-            //
+            LogHelper::log("error", "exception occured", $e->getMessage(), 1);
         });
+        // $this->reportable(function (PDOException $e) {
+        //     //
+        // });
     }
 }
