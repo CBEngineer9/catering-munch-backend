@@ -41,7 +41,7 @@ class MenuController extends Controller
         $sort_type = $request->sort['type'] ?? "asc";
         $batch_size = $request->batch_size ?? 10;
 
-        $listMenu = Menu::withTrashed()->orderBy($sort_column,$sort_type);
+        $listMenu = Menu::orderBy($sort_column,$sort_type);
         if ($request->has('provider_id')) {
             $listMenu = $listMenu->where('users_id',$request->provider_id);
         }
