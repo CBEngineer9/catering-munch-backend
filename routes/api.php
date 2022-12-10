@@ -27,6 +27,10 @@ use Illuminate\Support\Facades\Route;
 // [x] provider menunggu = customer
 // [x] history menu
 // [ ] history log
+// [ ] Plocy users
+
+// CHANGELOG 
+// - admin group gone
 
 // USER UTILITY //////////////////////////////////////////////////////////////
 // untuk cek siapa yang login
@@ -59,33 +63,31 @@ Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/register', [RegisterController::class, 'register'])->name('register');
 Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'logout']);
 
-// endpoint admin
-Route::prefix('admin')->group(function () {
-    // USERS ///////////////////////////////////////////////////////////
-    Route::prefix('users')->group(function () {
-        ////////////////////////////////////////////////////////////
-        // DEPRECATED ZONE
-        Route::get('getAllCustomers', [UsersController::class, 'getAllCustomers']);
-        Route::get('getAllProviders', [UsersController::class, 'getAllProviders']);
-        ///////////////////////////////////////////////////////////
+// TODO policy
+// USERS ///////////////////////////////////////////////////////////
+Route::prefix('users')->group(function () {
+    ////////////////////////////////////////////////////////////
+    // DEPRECATED ZONE
+    Route::get('getAllCustomers', [UsersController::class, 'getAllCustomers']);
+    Route::get('getAllProviders', [UsersController::class, 'getAllProviders']);
+    ///////////////////////////////////////////////////////////
 
-        Route::patch('banUser/{id}', [UsersController::class, 'banUser']);
-        Route::patch('unbanUser/{id}', [UsersController::class, 'unbanUser']);
-        Route::patch('approveProvider/{id}', [UsersController::class, 'approveProvider']);
-        Route::delete('purge/{id}', [UsersController::class, 'purge']);
-        Route::post('restore/{id}', [UsersController::class, 'restore']);
-    });
-    Route::resource('users', UsersController::class)
-        ->missing(function (Request $request) {
-            return response()->json([
-                'status' => 'not found',
-                'message' => 'we cannot find that resource'
-            ],404);
-        });
-    // avaliable actions
-    // index, store, show, update, destroy
-    // https://laravel.com/docs/9.x/controllers#actions-handled-by-resource-controller
+    Route::patch('banUser/{id}', [UsersController::class, 'banUser']);
+    Route::patch('unbanUser/{id}', [UsersController::class, 'unbanUser']);
+    Route::patch('approveProvider/{id}', [UsersController::class, 'approveProvider']);
+    Route::delete('purge/{id}', [UsersController::class, 'purge']);
+    Route::post('restore/{id}', [UsersController::class, 'restore']);
 });
+Route::resource('users', UsersController::class)
+    ->missing(function (Request $request) {
+        return response()->json([
+            'status' => 'not found',
+            'message' => 'we cannot find that resource'
+        ],404);
+    });
+// avaliable actions
+// index, store, show, update, destroy
+// https://laravel.com/docs/9.x/controllers#actions-handled-by-resource-controller
 
 // MENU ////////////////////////////////////////////////////////////////////////
 Route::prefix('menu')->group(function () {
@@ -121,6 +123,35 @@ Route::resource('pesanan', PesananController::class);
 ///////////////////////////////////////////////////////////////
 // DEPRECATED ZONE
 ///////////////////////////////////////////////////////////////
+
+// endpoint admin
+Route::prefix('admin')->group(function () {
+    // USERS ///////////////////////////////////////////////////////////
+    Route::prefix('users')->group(function () {
+        ////////////////////////////////////////////////////////////
+        // DEPRECATED ZONE
+        Route::get('getAllCustomers', [UsersController::class, 'getAllCustomers']);
+        Route::get('getAllProviders', [UsersController::class, 'getAllProviders']);
+        ///////////////////////////////////////////////////////////
+
+        Route::patch('banUser/{id}', [UsersController::class, 'banUser']);
+        Route::patch('unbanUser/{id}', [UsersController::class, 'unbanUser']);
+        Route::patch('approveProvider/{id}', [UsersController::class, 'approveProvider']);
+        Route::delete('purge/{id}', [UsersController::class, 'purge']);
+        Route::post('restore/{id}', [UsersController::class, 'restore']);
+    });
+    Route::resource('users', UsersController::class)
+        ->missing(function (Request $request) {
+            return response()->json([
+                'status' => 'not found',
+                'message' => 'we cannot find that resource'
+            ],404);
+        });
+    // avaliable actions
+    // index, store, show, update, destroy
+    // https://laravel.com/docs/9.x/controllers#actions-handled-by-resource-controller
+});
+
 // endpoint providers
 Route::prefix('provider')->group(function () {
     Route::prefix('pesanan')->group(function () {

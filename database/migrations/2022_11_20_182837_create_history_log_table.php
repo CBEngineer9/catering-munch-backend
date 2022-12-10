@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id('log_id');
             $table->enum('log_level', ["debug", "info", "notice", "warning", "error", "critical", "alert", "emergency"])->default('warning');
             $table->string('log_title');
-            $table->string('log_desc');
+            $table->text('log_desc');
             $table->unsignedBigInteger('users_id');
             $table->timestamp('log_timestamp')->useCurrent()->useCurrentOnUpdate();
             

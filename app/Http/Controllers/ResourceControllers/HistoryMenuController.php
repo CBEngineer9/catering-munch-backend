@@ -4,6 +4,7 @@ namespace App\Http\Controllers\ResourceControllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\HistoryMenu;
+use App\Models\Users;
 use App\Rules\UserRoleRule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -19,26 +20,46 @@ class HistoryMenuController extends Controller
     public function index(Request $request)
     {
         // authorization (reuse menu policy)
+        // TODO only see owned
         $this->authorize('viewAny', Menu::class);
+
+        $currUser = new Users((Array)json_decode($request->user()));
+        $userId = $request->user()->users_id;
 
         $new_menu = new HistoryMenu();
         $tablename = $new_menu->getTable();
         $columns = Schema::getColumnListing($tablename);
         $request->validate([
-            "provider_id" => ["nullable", "exists:App\Models\Users,users_id", new UserRoleRule("provider")],
+            "provider_id" => [
+                Rule::prohibitedIf(!$currUser->isAdministrator()), 
+                Rule::requiredIf($currUser->isAdministrator()), 
+                "exists:App\Models\Users,users_id", 
+                new UserRoleRule("provider")],
             'sort' => 'nullable',
             'sort.column' => [ 'nullable' , Rule::in($columns)],
             'sort.type' => ['nullable', Rule::in(['asc','desc'])],
             'batch_size' => ["nullable", "integer", "gt:0"],
+            'date_lower' => ["nullable", 'date', "before:now"],
+            'date_upper' => ["nullable", 'date', "before_or_equal:now"]
         ]);
 
         $sort_column = $request->sort['column'] ?? "history_menu_id";
         $sort_type = $request->sort['type'] ?? "asc";
         $batch_size = $request->batch_size ?? 10;
 
-        $listMenu = HistoryMenu::withTrashed()->orderBy($sort_column,$sort_type);
+        $listMenu = HistoryMenu::orderBy($sort_column,$sort_type);
+        // return $listMenu->with('Menu')->get();
+        // return $currUser->users_id;
         if ($request->has('provider_id')) {
             $listMenu = $listMenu->whereRelation("Menu",'users_id',$request->provider_id);
+        } else {
+            $listMenu = $listMenu->whereRelation("Menu",'users_id',$userId);
+        }
+        if ($request->has('date_lower')) {
+            $listMenu = $listMenu->where('updated_at',">=",$request->date_lower);
+        }
+        if ($request->has('date_upper')) {
+            $listMenu = $listMenu->where('updated_at',"<=",$request->date_upper);
         }
         $listMenu = $listMenu->paginate($batch_size);
         return response()->json([

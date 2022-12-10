@@ -96,9 +96,9 @@ class MenuController extends Controller
 
         $path = $request->menu_foto->store('menu','public');
         
-        if ($request->user()->isAdministrator()) {
+        if ($request->user()->isAdministrator()) { // get user_id from form if admin
             $users_id = $request->users_id;
-        } else if ($request->user()->users_role === 'provider') {
+        } else if ($request->user()->users_role === 'provider') { // get user_id from user if provider
             $users_id = $request->user()->users_id;
         } 
         
@@ -131,7 +131,7 @@ class MenuController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => "Successfully added menu",
+            'message' => "successfully added menu",
         ],200);
     }
 
