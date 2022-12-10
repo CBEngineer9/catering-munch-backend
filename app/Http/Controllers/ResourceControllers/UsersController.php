@@ -5,6 +5,7 @@ namespace App\Http\Controllers\ResourceControllers;
 use App\Http\Controllers\Controller;
 use App\Models\Users;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -18,38 +19,105 @@ class UsersController extends Controller
      */
     public function index(Request $request)
     {
+        // authorize
+        $this->authorize('viewAny',Users::class);
+        $currUser = $request->user();
+
         $new_user = new Users();
         $tablename = $new_user->getTable();
         $columns = Schema::getColumnListing($tablename);
+        $appended = $new_user->getAppends();
+        $columns = array_merge($columns,$appended); // include appends in sortables
+
         $request->validate([
             'sort' => 'nullable',
             'sort.column' => [ 'required_with:sort.type' , Rule::in($columns)],
             'sort.type' => ['required_with:sort.column', Rule::in(['asc','desc'])],
             'batch_size' => ["integer", "gt:0"],
-            "users_role" => ['nullable', Rule::in(['admin','customer','provider'])],
-            "users_status" => ['nullable', Rule::in(['banned', 'aktif', 'menunggu'])],
+            "users_role" => [
+                'nullable', 
+                Rule::prohibitedIf($request->user()->users_role !== 'admin'), 
+                Rule::in(['admin','customer','provider'])
+            ],
+            "users_status" => [
+                'nullable',
+                Rule::prohibitedIf($request->user()->users_role !== 'admin'), 
+                Rule::in(['banned', 'aktif', 'menunggu'])
+            ], 
             "users_nama" => ['nullable', "string"],
+            "customer_filter" => [
+                    Rule::prohibitedIf($request->user()->users_role !== 'customer'), 
+                    Rule::in(['pernah dipesan','sedang dipesan'])
+                ]
         ]);
 
         $sort_column = $request->sort['column'] ?? "users_id";
         $sort_type = $request->sort['type'] ?? "asc";
         $batch_size = $request->batch_size ?? 10;
 
-        $listUser = Users::withTrashed()->orderBy($sort_column,$sort_type);
-        if ($request->has('users_role')) {
-            $listUser = $listUser->where('users_role',$request->users_role);
+        $isAppend = false;
+        foreach ($appended as $app) {
+            if ($sort_column === $app) {
+                $isAppend = true;
+            }
         }
-        if ($request->has('users_status')) {
+
+        $listUser = Users::withTrashed($currUser->user_role === 'admin'); // if admin, with trash
+        if (!$isAppend) {
+            $listUser = $listUser->orderBy($sort_column,$sort_type);
+        }
+
+        if ($currUser->user_role !== 'admin') { // commoners can only see provider
+            $listUser = $listUser->where('users_role','provider');
+        } elseif ($request->has('users_role')) {
+            $listUser = $listUser->where('users_role',$request->users_role);
+        } 
+
+        // customer filter (pernah dipesan, sedang dipesan)
+        // pernah dipesan = provider dengan pemesanan status selesai
+        // sedang dipesan = provider dengan pemesanan status belum selesai
+        if ($request->customer_filter === 'pernah dipesan') {
+            $listUser = $listUser->whereRelation("HistoryPemesananProvider","users_customer",$currUser->users_id)
+                ->whereRelation("HistoryPemesananProvider","pemesanan_status","selesai");
+        } elseif ($request->customer_filter === 'sedang dipesan') {
+            $listUser = $listUser->whereRelation("HistoryPemesananProvider","users_customer",$currUser->users_id)
+                ->whereRelation("HistoryPemesananProvider","pemesanan_status","!=","selesai");
+        }
+
+        if ($currUser->users_role !== 'admin') { // default only see aktif, unless ADMIN (sees everything)
+            $listUser = $listUser->where('users_status','aktif');
+        } elseif ($request->has('users_status')) {
             $listUser = $listUser->where('users_status',$request->users_status);
         }
+
         if ($request->has('users_nama')) {
             $listUser = $listUser->where('users_nama','like','%'.$request->users_nama.'%');
         }
-        $listUser = $listUser->paginate($batch_size);
+
+        // appended column tidak ada di database, harus get dulu baru sort. harus paginate sendiri
+        if ($isAppend) {
+            $listUser = $listUser->get()->sortBy(function($users) use ($sort_column){
+                return $users->$sort_column;
+            }, SORT_REGULAR, $sort_type === "desc");
+
+            $batch = LengthAwarePaginator::resolveCurrentPage('page');
+            $paginated = new LengthAwarePaginator(
+                $listUser->forPage($batch, $batch_size), 
+                $listUser->count(), 
+                $batch_size, 
+                $batch,[
+                    'path' => LengthAwarePaginator::resolveCurrentPath(),
+                    'pageName' => 'page'
+                ]
+            );
+        } else {
+            $paginated = $listUser->paginate($batch_size);
+        }
+
         return response()->json([
             "status" => "success",
             "message" => "successfully fetched all user",
-            "data" => $listUser
+            "data" => $paginated
         ],200);
     }
 
@@ -102,6 +170,8 @@ class UsersController extends Controller
     public function approveProvider($id)
     {
         $userTerpilih = Users::findOrFail($id);
+        $this->authorize('approve',$userTerpilih);
+
         $userTerpilih->users_status = "aktif";
         $userTerpilih->save();
         return response()->json([
@@ -128,6 +198,8 @@ class UsersController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create',Users::class);
+        
         $request->validate([
             "users_nama" => "required",
             "users_email" => "required | email | unique:users,users_email",
@@ -163,6 +235,8 @@ class UsersController extends Controller
     public function show($id)
     {
         $user = Users::withTrashed()->findOrFail($id);
+        $this->authorize('view',$user);
+
         return response()->json([
             "status" => "success",
             "message" => "successfully fetched user",
@@ -190,6 +264,9 @@ class UsersController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $userTerpilih = Users::findOrFail($id);
+        $this->authorize('update',$userTerpilih);
+        
         $validator = Validator::make($request->all(),[
             "users_nama" => "nullable",
             "users_email" => "nullable | email | unique:users,users_email",
@@ -207,7 +284,6 @@ class UsersController extends Controller
         }
 
         // all good
-        $userTerpilih = Users::findOrFail($id);
         $columns = $userTerpilih->getFillable();
         foreach ($columns as $column) {
             if ($request->has($column)) {
@@ -230,6 +306,8 @@ class UsersController extends Controller
     public function banUser($id)
     {
         $userTerpilih = Users::findOrFail($id);
+        $this->authorize('ban',$userTerpilih);
+
         if ($userTerpilih->users_status == 'banned') {
             return response()->json([
                 'status' => "bad request",
@@ -253,6 +331,8 @@ class UsersController extends Controller
     public function unbanUser($id)
     {
         $userTerpilih = Users::findOrFail($id);
+        $this->authorize('unban',$userTerpilih);
+
         if ($userTerpilih->users_status == 'aktif') {
             return response()->json([
                 'status' => "bad request",
@@ -275,6 +355,9 @@ class UsersController extends Controller
      */
     public function destroy($id)
     {
+        $user = Users::findOrFail($id);
+        $this->authorize('delete',$user);
+
         Users::destroy($id);
         return response()->json([
             'status' => "success",
@@ -290,7 +373,10 @@ class UsersController extends Controller
      */
     public function restore($id)
     {
-        Users::withTrashed()->findOrFail($id)->restore();
+        $user = Users::withTrashed()->findOrFail($id);
+        $this->authorize('restore',$user);
+
+        $user->restore();
         return response()->json([
             'status' => "success",
             'message' => "successfuly restore user"
@@ -305,7 +391,10 @@ class UsersController extends Controller
      */
     public function purge($id)
     {
-        Users::withTrashed()->findOrFail($id)->forceDelete();
+        $user = Users::withTrashed()->findOrFail($id);
+        $this->authorize('forceDelete',$user);
+        
+        $user->forceDelete();
         return response()->json([
             'status' => "success",
             'message' => "successfuly delete user"

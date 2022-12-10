@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\HistoryMenu;
 use App\Models\Menu;
 use App\Models\Users;
+use App\Rules\UserRoleRule;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -30,7 +30,7 @@ class MenuController extends Controller
         $tablename = $new_menu->getTable();
         $columns = Schema::getColumnListing($tablename);
         $request->validate([
-            "provider_id" => "nullable|exists:App\Models\Users,users_id",
+            "provider_id" => ["nullable", "exists:App\Models\Users,users_id", new UserRoleRule("provider")],
             'sort' => 'nullable',
             'sort.column' => [ 'nullable' , Rule::in($columns)],
             'sort.type' => ['nullable', Rule::in(['asc','desc'])],
@@ -96,9 +96,9 @@ class MenuController extends Controller
 
         $path = $request->menu_foto->store('menu','public');
         
-        if ($request->user()->isAdministrator()) {
+        if ($request->user()->isAdministrator()) { // get user_id from form if admin
             $users_id = $request->users_id;
-        } else if ($request->user()->users_role === 'provider') {
+        } else if ($request->user()->users_role === 'provider') { // get user_id from user if provider
             $users_id = $request->user()->users_id;
         } 
         
@@ -131,7 +131,7 @@ class MenuController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => "Successfully added menu",
+            'message' => "successfully added menu",
         ],200);
     }
 
