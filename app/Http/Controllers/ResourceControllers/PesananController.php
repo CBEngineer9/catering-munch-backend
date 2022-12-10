@@ -75,6 +75,7 @@ class PesananController extends Controller
         } else if ($currUser->users_role == "customer") {
             $pemesanan = HistoryPemesanan::where("users_customer",$currUser->users_id)
             ->orderBy($sort_column,$sort_type)
+            ->with("UsersCustomer:users_id,users_name")
             ->paginate($batch_size);
             return response()->json([
                 "status" => "success",

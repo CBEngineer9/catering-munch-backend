@@ -37,7 +37,6 @@ class UsersFactory extends Factory
     public function provider()
     {
         return $this->state(fn (array $attributes) => [
-            'users_status' => "menunggu",
             'users_role' => 'provider',
         ]);
     }

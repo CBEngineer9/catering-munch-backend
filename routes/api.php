@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Controllers\Admin\HistoryController;
 use App\Http\Controllers\LoginRegis\LoginController;
 use App\Http\Controllers\LoginRegis\RegisterController;
+use App\Http\Controllers\ResourceControllers\HistoryLogController;
 use App\Http\Controllers\ResourceControllers\HistoryMenuController;
 use App\Http\Controllers\ResourceControllers\MenuController;
 use App\Http\Controllers\ResourceControllers\PesananController;
@@ -31,6 +31,7 @@ use Illuminate\Support\Facades\Route;
 
 // CHANGELOG 
 // - admin group gone
+// - added log 
 
 // USER UTILITY //////////////////////////////////////////////////////////////
 // untuk cek siapa yang login
@@ -62,8 +63,9 @@ Route::middleware('auth:sanctum')->get('/mini-me', function (Request $request) {
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/register', [RegisterController::class, 'register'])->name('register');
 Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'logout']);
+////////////////////////////////////////////////////////////////////////////////
 
-// TODO policy
+
 // USERS ///////////////////////////////////////////////////////////
 Route::prefix('users')->group(function () {
     ////////////////////////////////////////////////////////////
@@ -88,6 +90,16 @@ Route::resource('users', UsersController::class)
 // avaliable actions
 // index, store, show, update, destroy
 // https://laravel.com/docs/9.x/controllers#actions-handled-by-resource-controller
+////////////////////////////////////////////////////////////////////////////////
+
+
+// LOG /////////////////////////////////////////////////////////////////////////
+// TODO middlewre
+Route::resource('log', HistoryLogController::class);
+// avaliable actions
+// index
+////////////////////////////////////////////////////////////////////////////////
+
 
 // MENU ////////////////////////////////////////////////////////////////////////
 Route::prefix('menu')->group(function () {
@@ -96,12 +108,14 @@ Route::prefix('menu')->group(function () {
 Route::resource('menu', MenuController::class);
 // avaliable actions
 // index, store, show, update, destroy
+////////////////////////////////////////////////////////////////////////////////
 
 
 // HISTORY MENU ////////////////////////////////////////////////////////////////
 Route::resource('historyMenu', HistoryMenuController::class);
 // avaliable actions
 // index
+////////////////////////////////////////////////////////////////////////////////
 
 
 // PESANAN /////////////////////////////////////////////////////////////////////
@@ -115,6 +129,7 @@ Route::prefix('pesanan')->group(function () {
 Route::resource('pesanan', PesananController::class);
 // avaliable actions
 // index, store, show, update, destroy
+////////////////////////////////////////////////////////////////////////////////
 
 
 

@@ -26,7 +26,7 @@ class HistoryPemesananFactory extends Factory
             "pemesanan_jumlah" => 0,
             "pemesanan_total" => 0,
             "pemesanan_status" => $statusList[rand(0,3)],
-            "pemesanan_rating" => fake()->numberBetween(0,10),
+            "pemesanan_rating" => fake()->numberBetween(1,5),
         ];
     }
 
