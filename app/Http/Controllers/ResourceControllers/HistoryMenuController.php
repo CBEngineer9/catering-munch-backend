@@ -20,7 +20,6 @@ class HistoryMenuController extends Controller
     public function index(Request $request)
     {
         // authorization (reuse menu policy)
-        // TODO only see owned
         $this->authorize('viewAny', Menu::class);
 
         $currUser = new Users((Array)json_decode($request->user()));
@@ -48,13 +47,14 @@ class HistoryMenuController extends Controller
         $batch_size = $request->batch_size ?? 10;
 
         $listMenu = HistoryMenu::orderBy($sort_column,$sort_type);
-        // return $listMenu->with('Menu')->get();
-        // return $currUser->users_id;
+        
+        // show only owned menu, unless specified by ADMIN
         if ($request->has('provider_id')) {
             $listMenu = $listMenu->whereRelation("Menu",'users_id',$request->provider_id);
         } else {
             $listMenu = $listMenu->whereRelation("Menu",'users_id',$userId);
         }
+
         if ($request->has('date_lower')) {
             $listMenu = $listMenu->where('updated_at',">=",$request->date_lower);
         }

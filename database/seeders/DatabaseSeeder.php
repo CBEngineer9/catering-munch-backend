@@ -5,6 +5,7 @@ namespace Database\Seeders;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 use App\Models\DetailPemesanan;
+use App\Models\HistoryMenu;
 use App\Models\HistoryPemesanan;
 use App\Models\HistoryTopup;
 use App\Models\Menu;
@@ -63,7 +64,7 @@ class DatabaseSeeder extends Seeder
             ]);
         }
         $customers = Users::factory()->count(20)->customer()->has(HistoryTopup::factory())->create();
-        $providers = Users::factory()->count(20)->provider()->has(Menu::factory()->count(3))->create();
+        $providers = Users::factory()->count(20)->provider()->has(Menu::factory()->count(3)->has(HistoryMenu::factory()))->create();
 
         for ($i=0; $i < 5; $i++) {
             $provider = $providers[rand(0,count($providers)-1)];
@@ -73,8 +74,7 @@ class DatabaseSeeder extends Seeder
                 ->has(DetailPemesanan::factory()->forProvider($provider)->count(5))
                 ->create();
         }
-        // [ ] History Log
-        // [ ] History Menu
+        // TODO History Log
 
     }
 }
