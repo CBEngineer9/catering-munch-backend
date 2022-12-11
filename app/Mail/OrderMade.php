@@ -16,7 +16,7 @@ class OrderMade extends Mailable
     use Queueable, SerializesModels;
 
     /** @var App\Models\HistoryPemesanan $historyPemesanan Header pesanan to send */
-    protected $historyPemesanan;
+    public $historyPemesanan;
 
     /**
      * Create a new message instance.

@@ -27,7 +27,8 @@ class Users extends Authenticatable
         'users_status'
     ];
     protected $appends = [
-        'users_rating'
+        'users_rating',
+        'users_photo'
     ];
 
      /**
@@ -50,6 +51,19 @@ class Users extends Authenticatable
                     return null;
                 } else {
                     return HistoryPemesanan::where('users_provider',$this->users_id)->average('pemesanan_rating');
+                }
+            }
+        );
+    }
+
+    protected function usersPhoto(): Attribute
+    {
+        return new Attribute(
+            get: function() {
+                if ($this->users_role !== 'provider') {
+                    return null;
+                } else {
+                    return $this->Menu->first()->menu_photo ?? 'sampleFood.jpeg';
                 }
             }
         );

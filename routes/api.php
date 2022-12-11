@@ -26,8 +26,8 @@ use Illuminate\Support\Facades\Route;
 // [x] policy / middleware
 // [x] provider menunggu = customer
 // [x] history menu
-// [ ] history log
-// [ ] Plocy users
+// [x] history log
+// [x] Plocy users
 
 // CHANGELOG 
 // - admin group gone
