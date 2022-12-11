@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\HistoryPemesanan;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class PemesananResource extends JsonResource
@@ -17,7 +18,7 @@ class PemesananResource extends JsonResource
         return [
             'pemesanan_id' => $this->pemesanan_id,
             'users_provider' => $this->users_provider,
-            'users_customer' => $this->users_customer->UsersCustomer->users_nama,
+            'users_customer' => UsersCustomerResource::collection($this->UsersCustomer),
             'pemesanan_jumlah' => $this->pemesanan_jumlah,
             'pemesanan_total' => $this->pemesanan_total,
             'pemesanan_status' => $this->pemesanan_status,
