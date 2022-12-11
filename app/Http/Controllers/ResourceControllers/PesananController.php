@@ -47,6 +47,8 @@ class PesananController extends Controller
             'sort.column' => [ 'nullable' , Rule::in($columns)],
             'sort.type' => ['nullable', Rule::in(['asc','desc'])],
             'batch_size' => ["nullable", "integer", "gt:0"],
+            'date_lower' => ["nullable", 'date', "before:now"],
+            'date_upper' => ["nullable", 'date', "before_or_equal:now"]
         ]);
 
         $sort_column = $request->sort['column'] ?? "pemesanan_id";
@@ -55,7 +57,16 @@ class PesananController extends Controller
 
         $currUser = $request->user();
         if ($currUser->users_role == 'admin') {
-            $pemesanan = HistoryPemesanan::orderBy($sort_column,$sort_type)->paginate($batch_size);
+            $pemesanan = HistoryPemesanan::orderBy($sort_column,$sort_type);
+            
+            if ($request->has('date_lower')) {
+                $pemesanan = $pemesanan->where('created_at',">=",$request->date_lower);
+            }
+            if ($request->has('date_upper')) {
+                $pemesanan = $pemesanan->where('created_at',"<=",$request->date_upper);
+            }
+
+            $pemesanan = $pemesanan->paginate($batch_size);
             return response()->json([
                 'status' => "success",
                 'message' => "successfully fetched all data",
@@ -63,8 +74,16 @@ class PesananController extends Controller
             ],200);
         } else if ($currUser->users_role == "provider") {
             $pemesanan = HistoryPemesanan::where("users_provider",$currUser->users_id)
-                ->orderBy($sort_column,$sort_type)
-                ->paginate($batch_size);
+                ->orderBy($sort_column,$sort_type);
+
+            if ($request->has('date_lower')) {
+                $pemesanan = $pemesanan->where('created_at',">=",$request->date_lower);
+            }
+            if ($request->has('date_upper')) {
+                $pemesanan = $pemesanan->where('created_at',"<=",$request->date_upper);
+            }
+
+            $pemesanan = $pemesanan->paginate($batch_size);
             return response()->json([
                 "status" => "success",
                 "message" => "successfuly fetched pemesanan provider",
@@ -74,9 +93,17 @@ class PesananController extends Controller
             // return response()->caps('success');
         } else if ($currUser->users_role == "customer") {
             $pemesanan = HistoryPemesanan::where("users_customer",$currUser->users_id)
-            ->orderBy($sort_column,$sort_type)
-            ->with("UsersCustomer:users_id,users_nama")
-            ->paginate($batch_size);
+                ->orderBy($sort_column,$sort_type)
+                ->with("UsersCustomer:users_id,users_nama");
+                
+            if ($request->has('date_lower')) {
+                $pemesanan = $pemesanan->where('created_at',">=",$request->date_lower);
+            }
+            if ($request->has('date_upper')) {
+                $pemesanan = $pemesanan->where('created_at',"<=",$request->date_upper);
+            }
+
+            $pemesanan = $pemesanan->paginate($batch_size);
             return response()->json([
                 "status" => "success",
                 "message" => "successfuly fetched pemesanan customer",
