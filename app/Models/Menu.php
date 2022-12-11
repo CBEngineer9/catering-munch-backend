@@ -44,7 +44,7 @@ class Menu extends Model
         return $this->hasMany(HistoryRating::class, "menu_id", "menu_id");
     }
 
-    public function detail_pemesanan()
+    public function DetailPemesanan()
     {
         return $this->hasMany(DetailPemesanan::class, "menu_id", "menu_id");
     }

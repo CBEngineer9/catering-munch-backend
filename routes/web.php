@@ -22,11 +22,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Route::get('/notiftest', function () {
-//     $historyPemesanan = HistoryPemesanan::find(1);
-//     return (new OrderMadeNotif($historyPemesanan))
-//         ->toMail($historyPemesanan->UsersCustomer);
-// });
+Route::get('/notiftest', function () {
+    $historyPemesanan = HistoryPemesanan::find(1);
+    return (new OrderMadeNotif($historyPemesanan))
+        ->toMail($historyPemesanan->UsersCustomer);
+});
 
 
 //LOGOUT

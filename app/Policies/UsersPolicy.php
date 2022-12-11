@@ -45,9 +45,9 @@ class UsersPolicy
     public function view(Users $users, Users $other_user)
     {
         // all provider profile are public
-        return $other_user->user_role === 'provider'
+        return $other_user->users_role === 'provider'
         ? Response::allow()
-        : Response::deny('You do not own this resource.');
+        : Response::deny('You cannot view this resource.');
     }
 
     /**
