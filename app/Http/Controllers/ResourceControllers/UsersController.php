@@ -48,7 +48,7 @@ class UsersController extends Controller
             "customer_filter" => [
                     Rule::prohibitedIf($request->user()->users_role !== 'customer'), 
                     Rule::in(['pernah dipesan','sedang dipesan'])
-                ]
+            ]
         ]);
 
         $sort_column = $request->sort['column'] ?? "users_id";
