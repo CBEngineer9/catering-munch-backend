@@ -28,6 +28,16 @@ class DetailPemesanan extends Model
         'updated_at'
     ];
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
     public function Menu()
     {
         return $this->belongsTo(Menu::class, "menu_id", "menu_id");

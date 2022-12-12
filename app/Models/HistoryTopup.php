@@ -28,6 +28,16 @@ class HistoryTopup extends Model
         'updated_at'
     ];
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
     public function Users()
     {
         return $this->belongsTo(Users::class, "users_id", "users_id");

@@ -291,7 +291,7 @@ class PesananController extends Controller
         $thismonth = DetailPemesanan::whereMonth('detail_tanggal',$month)->whereYear('detail_tanggal',$year)
             ->with([
                     'HistoryPemesanan:pemesanan_id,users_customer,users_provider' => [
-                        'UsersCustomer:users_id,users_nama,users_alamat'
+                        'UsersCustomer:users_id,users_nama,users_alamat,users_telepon'
                     ],
                     'Menu'
                 ])
