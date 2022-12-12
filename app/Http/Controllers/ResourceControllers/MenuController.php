@@ -35,6 +35,7 @@ class MenuController extends Controller
             'sort.column' => [ 'nullable' , Rule::in($columns)],
             'sort.type' => ['nullable', Rule::in(['asc','desc'])],
             'batch_size' => ["nullable", "integer", "gt:0"],
+            'menu_nama' =>  ['nullable', "string"],
         ]);
 
         $sort_column = $request->sort['column'] ?? "menu_id";
@@ -44,6 +45,9 @@ class MenuController extends Controller
         $listMenu = Menu::orderBy($sort_column,$sort_type);
         if ($request->has('provider_id')) {
             $listMenu = $listMenu->where('users_id',$request->provider_id);
+        }
+        if ($request->has('menu_nama')) {
+            $listMenu = $listMenu->where('menu_nama','like','%'.$request->menu_nama.'%');
         }
         $listMenu = $listMenu->paginate($batch_size);
         return response()->json([

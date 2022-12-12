@@ -16,13 +16,14 @@ class PemesananResource extends JsonResource
     {
         return [
             'pemesanan_id' => $this->pemesanan_id,
-            'users_provider' => $this->users_provider,
-            'users_customer' => $this->users_customer,
+            'users_provider' => $this->UsersProvider,
+            'users_customer' => $this->UsersCustomer,
             'pemesanan_jumlah' => $this->pemesanan_jumlah,
             'pemesanan_total' => $this->pemesanan_total,
             'pemesanan_status' => $this->pemesanan_status,
             'pemesanan_rating' => $this->pemesanan_rating,
             'detail_pemesanan' => DetailPemesananResource::collection($this->DetailPemesanan),
+            'created_at' => $this->created_at->format('Y-m-d:h'),
         ];
     }
 }

@@ -17,7 +17,7 @@ class DetailPemesananResource extends JsonResource
         return [
             'detail_id' => $this->detail_id,
             'pemesanan_id' => $this->pemesanan_id,
-            'menu_id' => $this->menu_id,
+            'menu' => $this->Menu,
             'detail_jumlah' => $this->detail_jumlah,
             'detail_total' => $this->detail_total,
             'detail_tanggal' => $this->detail_tanggal,
