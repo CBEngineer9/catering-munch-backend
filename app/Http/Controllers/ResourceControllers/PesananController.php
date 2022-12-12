@@ -59,14 +59,11 @@ class PesananController extends Controller
 
         $currUser = $request->user();
         if ($currUser->users_role == 'admin') {
-            $pemesanan = HistoryPemesanan::orderBy($sort_column,$sort_type);
-            
-            if ($request->has('date_lower')) {
-                $pemesanan = $pemesanan->where('created_at',">=",$request->date_lower);
-            }
-            if ($request->has('date_upper')) {
-                $pemesanan = $pemesanan->where('created_at',"<=",$request->date_upper);
-            }
+            $pemesanan = HistoryPemesanan::orderBy($sort_column,$sort_type)
+                ->with("UsersCustomer:users_id,users_nama")
+                ->with("UsersProvider:users_id,users_nama")
+                ->where('created_at',"<=",$date_upper)
+                ->where('created_at',">=",$date_lower);
 
             $pemesanan = $pemesanan->paginate($batch_size);
             return response()->json([
@@ -76,14 +73,11 @@ class PesananController extends Controller
             ],200);
         } else if ($currUser->users_role == "provider") {
             $pemesanan = HistoryPemesanan::where("users_provider",$currUser->users_id)
+                ->whereDate('created_at',">=",$date_lower)
+                ->whereDate('created_at',"<=",$date_upper)
+                ->with("UsersCustomer:users_id,users_nama")
+                ->with("UsersProvider:users_id,users_nama")
                 ->orderBy($sort_column,$sort_type);
-
-            if ($request->has('date_lower')) {
-                $pemesanan = $pemesanan->where('created_at',">=",$request->date_lower);
-            }
-            if ($request->has('date_upper')) {
-                $pemesanan = $pemesanan->where('created_at',"<=",$request->date_upper);
-            }
 
             $pemesanan = $pemesanan->paginate($batch_size);
             return response()->json([
@@ -95,15 +89,11 @@ class PesananController extends Controller
             // return response()->caps('success');
         } else if ($currUser->users_role == "customer") {
             $pemesanan = HistoryPemesanan::where("users_customer",$currUser->users_id)
+                ->where('created_at',">=",$date_lower)
+                ->where('created_at',"<=",$date_upper)
                 ->orderBy($sort_column,$sort_type)
-                ->with("UsersCustomer:users_id,users_nama");
-                
-            if ($request->has('date_lower')) {
-                $pemesanan = $pemesanan->where('created_at',">=",$request->date_lower);
-            }
-            if ($request->has('date_upper')) {
-                $pemesanan = $pemesanan->where('created_at',"<=",$request->date_upper);
-            }
+                ->with("UsersCustomer:users_id,users_nama")
+                ->with("UsersProvider:users_id,users_nama");
 
             $pemesanan = $pemesanan->paginate($batch_size);
             return response()->json([

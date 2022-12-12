@@ -21,7 +21,7 @@ class HistoryLog extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'log_timestamp' => 'datetime',
+        'log_timestamp' => 'datetime:Y-m-d H:i:s',
     ];
 
     public function Users()

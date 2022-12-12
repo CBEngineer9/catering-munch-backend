@@ -38,11 +38,11 @@ class HistoryLogController extends Controller
         $date_upper = $request->date_upper ?? date("Y-m-d");
 
         $histLog = HistoryLog::orderBy($sort_column,$sort_type);
-        if ($request->has('date_lower')) {
-            $histLog = $histLog->where('log_timestamp',">=",$request->date_lower);
+        if ($date_lower) {
+            $histLog = $histLog->where('log_timestamp',">=",$date_lower);
         }
-        if ($request->has('date_upper')) {
-            $histLog = $histLog->where('log_timestamp',"<=",$request->date_upper);
+        if ($date_upper) {
+            $histLog = $histLog->where('log_timestamp',"<=",$date_upper);
         }
         $histLog = $histLog->paginate($batch_size);
         return response()->json([

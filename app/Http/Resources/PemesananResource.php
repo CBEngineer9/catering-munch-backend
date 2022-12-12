@@ -22,7 +22,7 @@ class PemesananResource extends JsonResource
             'pemesanan_total' => $this->pemesanan_total,
             'pemesanan_status' => $this->pemesanan_status,
             'pemesanan_rating' => $this->pemesanan_rating,
-            'created_at' => $this->created_at->format('Y-m-d:h'),
+            'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'detail_pemesanan' => DetailPemesananResource::collection($this->DetailPemesanan),
         ];
     }
