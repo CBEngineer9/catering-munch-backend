@@ -48,7 +48,8 @@ class PesananController extends Controller
             'sort.type' => ['nullable', Rule::in(['asc','desc'])],
             'batch_size' => ["nullable", "integer", "gt:0"],
             'date_lower' => ["nullable", 'date', "before:now"],
-            'date_upper' => ["nullable", 'date', "before_or_equal:now"]
+            'date_upper' => ["nullable", 'date', "before_or_equal:now"],
+            "pemesanan_status" => ["nullable", Rule::in(['menunggu','ditolak','diterima','selesai'])],
         ]);
 
         $sort_column = $request->sort['column'] ?? "pemesanan_id";
@@ -287,7 +288,7 @@ class PesananController extends Controller
                     ],
                     'Menu'
                 ])
-            ;
+            ->orderBy('detail_tanggal');
 
         if ($user->users_role == 'provider') {
             $thismonth = $thismonth->whereRelation('HistoryPemesanan', 'users_provider', $user->users_id);
