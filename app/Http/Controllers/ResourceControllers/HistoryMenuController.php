@@ -45,6 +45,8 @@ class HistoryMenuController extends Controller
         $sort_column = $request->sort['column'] ?? "updated_at";
         $sort_type = $request->sort['type'] ?? "desc";
         $batch_size = $request->batch_size ?? 10;
+        $date_lower = $request->date_lower ?? "1970-01-01";
+        $date_upper = $request->date_upper ?? date("Y-m-d");
 
         $listMenu = HistoryMenu::orderBy($sort_column,$sort_type);
         

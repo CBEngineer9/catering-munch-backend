@@ -34,6 +34,8 @@ class HistoryLogController extends Controller
         $sort_column = $request->sort['column'] ?? "log_timestamp";
         $sort_type = $request->sort['type'] ?? "desc";
         $batch_size = $request->batch_size ?? 10;
+        $date_lower = $request->date_lower ?? "1970-01-01";
+        $date_upper = $request->date_upper ?? date("Y-m-d");
 
         $histLog = HistoryLog::orderBy($sort_column,$sort_type);
         if ($request->has('date_lower')) {
