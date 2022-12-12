@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Models\HistoryPemesanan;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class PemesananResource extends JsonResource
@@ -23,8 +22,8 @@ class PemesananResource extends JsonResource
             'pemesanan_total' => $this->pemesanan_total,
             'pemesanan_status' => $this->pemesanan_status,
             'pemesanan_rating' => $this->pemesanan_rating,
-            'detail_pemesanan' => DetailPemesananResource::collection($this->DetailPemesanan),
             'created_at' => $this->created_at->format('Y-m-d:h'),
+            'detail_pemesanan' => DetailPemesananResource::collection($this->DetailPemesanan),
         ];
     }
 }

@@ -27,8 +27,8 @@ class HistoryLogController extends Controller
             'sort.column' => [ 'nullable' , Rule::in($columns)],
             'sort.type' => ['nullable', Rule::in(['asc','desc'])],
             'batch_size' => ["nullable", "integer", "gt:0"],
-            'date_lower' => ["nullable", 'date', "before:now"],
-            'date_upper' => ["nullable", 'date', "before_or_equal:now"]
+            'date_lower' => ['date', "before:now"],
+            'date_upper' => ['date', "before_or_equal:now"]
         ]);
 
         $sort_column = $request->sort['column'] ?? "log_timestamp";
