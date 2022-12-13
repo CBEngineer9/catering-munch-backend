@@ -62,12 +62,12 @@ class UsersController extends Controller
             }
         }
 
-        $listUser = Users::withTrashed($currUser->user_role === 'admin'); // if admin, with trash
+        $listUser = Users::withTrashed($currUser->users_role === 'admin'); // if admin, with trash
         if (!$isAppend) {
             $listUser = $listUser->orderBy($sort_column,$sort_type);
         }
 
-        if ($currUser->user_role !== 'admin') { // commoners can only see provider
+        if ($currUser->users_role !== 'admin') { // commoners can only see provider
             $listUser = $listUser->where('users_role','provider');
         } elseif ($request->has('users_role')) {
             $listUser = $listUser->where('users_role',$request->users_role);
