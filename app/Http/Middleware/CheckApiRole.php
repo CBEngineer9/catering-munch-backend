@@ -15,10 +15,16 @@ class CheckApiRole
      * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
      * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
-    public function handle(Request $request, Closure $next, $role)
+    public function handle(Request $request, Closure $next, ...$roles)
     {
         if (auth()->check()) {
-            if (auth()->user()->users_role == $role) {
+            $pass = false;
+            foreach ($roles as $role) {
+                if (auth()->user()->users_role === $role) {
+                    $pass = true;
+                }
+            }
+            if ($pass) {
                 return $next($request);
             } else {
                 return response()->json([

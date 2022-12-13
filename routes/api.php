@@ -57,30 +57,46 @@ Route::middleware('auth:sanctum')->get('/mini-me', function (Request $request) {
         ],
     ],200);
 });
-Route::middleware(['auth:sanctum','role:provider'])->get('/mystat', function (Request $request) {
+Route::middleware(['auth:sanctum','role:provider,admin'])->get('/mystat', function (Request $request) {
     $user = $request->user();
-    $header_pemesanan = Users::find($user->users_id)->HistoryPemesananProvider();
-    $thismonth_delivery = $header_pemesanan->where('pemesanan_status','diterima')
-        ->withCount('DetailPemesanan')->first();
-    $totalpendapatan = $header_pemesanan->whereDoesntHave('DetailPemesanan',function(Builder $query){
-            $query->where('detail_status','belum dikirim')
-                ->orWhere('detail_status','terkirim');
-        })
-        ->sum('pemesanan_total');
-    $made_delivery = $header_pemesanan->where('pemesanan_status','diterima')
-        ->withCount(['DetailPemesanan' => function(Builder $query) {
-            $query->where('detail_status','terkirim');
-        }])
-        ->first();
-    return response()->json([
-        "status" => 'success',
-        'message' => 'successfully fetched provider stat',
-        "data" => [
-            "thismonth_delivery" => $thismonth_delivery->detail_pemesanan_count,
-            "total_pendapatan" => $totalpendapatan,
-            "made_delivery" => $made_delivery->detail_pemesanan_count,
-        ],
-    ],200);
+    if ($user->users_role === 'admin') {
+        $customer = Users::where('users_role','customer')->count();
+        $provider = Users::where('users_role','provider')->where('users_status','!=','menunggu')->count();
+        $unverified = Users::where('users_role','provider')->where('users_status','menunggu')->count();
+
+        return response()->json([
+            "status" => 'success',
+            'message' => 'successfully fetched admin stat',
+            "data" => [
+                "customers_count" => $customer,
+                "providers_count" => $provider,
+                "unverified_count" => $unverified,
+            ],
+        ],200);
+    } elseif ($user->users_role === 'provider') {
+        $header_pemesanan = Users::find($user->users_id)->HistoryPemesananProvider();
+        $thismonth_delivery = $header_pemesanan->where('pemesanan_status','diterima')
+            ->withCount('DetailPemesanan')->first();
+        $totalpendapatan = $header_pemesanan->whereDoesntHave('DetailPemesanan',function(Builder $query){
+                $query->where('detail_status','belum dikirim')
+                    ->orWhere('detail_status','terkirim');
+            })
+            ->sum('pemesanan_total');
+        $made_delivery = $header_pemesanan->where('pemesanan_status','diterima')
+            ->withCount(['DetailPemesanan' => function(Builder $query) {
+                $query->where('detail_status','terkirim');
+            }])
+            ->first();
+        return response()->json([
+            "status" => 'success',
+            'message' => 'successfully fetched provider stat',
+            "data" => [
+                "thismonth_delivery" => $thismonth_delivery->detail_pemesanan_count,
+                "total_pendapatan" => $totalpendapatan,
+                "made_delivery" => $made_delivery->detail_pemesanan_count,
+            ],
+        ],200);
+    }
 });
 
 // Tembak dulu sanctum/csrf-cookie untuk dapat csrf token
