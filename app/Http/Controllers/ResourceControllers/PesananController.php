@@ -65,7 +65,7 @@ class PesananController extends Controller
             ->where('created_at',"<=",$date_upper)
             ->where('created_at',">=",$date_lower);
 
-        if ($request->has('pemesanan_status')) {
+        if ($request->has('pemesanan_status') && $request->pemesanan_status != "") {
             $pemesanan->where("pemesanan_status",$request->pemesanan_status);
         }
 
@@ -292,7 +292,7 @@ class PesananController extends Controller
                 ])
             ->orderBy($sort_column,$sort_type);
 
-        if ($request->has('detail_status')) {
+        if ($request->has('detail_status') && $request->detail_status != "") {
             $thismonth = $thismonth->where('detail_status',$request->detail_status);
         }
 
