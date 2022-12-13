@@ -260,9 +260,16 @@ class PesananController extends Controller
         // authorize
         $this->authorize('viewDelivery',HistoryPemesanan::class);
 
+        $new_detail = new DetailPemesanan();
+        $tablename = $new_detail->getTable();
+        $columns = Schema::getColumnListing($tablename);
         $validator = Validator::make($request->all(),[
+            'sort' => 'nullable',
+            'sort.column' => [ 'nullable' , Rule::in($columns)],
+            'sort.type' => ['nullable', Rule::in(['asc','desc'])],
             "month" => ["required_with:year","gte:1","lte:12"],
-            "year" => ["required_with:month","gt:2010", "lt:3000"]
+            "year" => ["required_with:month","gt:2010", "lt:3000"],
+            "detail_status" => [Rule::in(['belum_dikirim','terkirim','diterima'])]
         ]);
         if ($validator->fails()) {
             return response() ->json([
@@ -271,6 +278,9 @@ class PesananController extends Controller
                 'errors' => $validator->errors(),
             ],422);
         }
+
+        $sort_column = $request->sort['column'] ?? "detail_tanggal";
+        $sort_type = $request->sort['type'] ?? "asc";
 
         if ($request->has('month') && $request->has('year')) {
             $year = $request->year;
@@ -288,7 +298,7 @@ class PesananController extends Controller
                     ],
                     'Menu'
                 ])
-            ->orderBy('detail_tanggal');
+            ->orderBy($sort_column,$sort_type);
 
         if ($user->users_role == 'provider') {
             $thismonth = $thismonth->whereRelation('HistoryPemesanan', 'users_provider', $user->users_id);
