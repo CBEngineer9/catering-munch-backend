@@ -59,13 +59,17 @@ class PesananController extends Controller
         $date_upper = $request->date_upper ?? date("Y-m-d");
 
         $currUser = $request->user();
-        if ($currUser->users_role == 'admin') {
-            $pemesanan = HistoryPemesanan::orderBy($sort_column,$sort_type)
-                ->with("UsersCustomer:users_id,users_nama")
-                ->with("UsersProvider:users_id,users_nama")
-                ->where('created_at',"<=",$date_upper)
-                ->where('created_at',">=",$date_lower);
+        $pemesanan = HistoryPemesanan::orderBy($sort_column,$sort_type)
+            ->with("UsersCustomer:users_id,users_nama")
+            ->with("UsersProvider:users_id,users_nama")
+            ->where('created_at',"<=",$date_upper)
+            ->where('created_at',">=",$date_lower);
 
+        if ($request->has('pemesanan_status')) {
+            $pemesanan->where("pemesanan_status",$request->pemesanan_status);
+        }
+
+        if ($currUser->users_role == 'admin') {
             $pemesanan = $pemesanan->paginate($batch_size);
             return response()->json([
                 'status' => "success",
@@ -73,14 +77,8 @@ class PesananController extends Controller
                 'data' => $pemesanan
             ],200);
         } else if ($currUser->users_role == "provider") {
-            $pemesanan = HistoryPemesanan::where("users_provider",$currUser->users_id)
-                ->whereDate('created_at',">=",$date_lower)
-                ->whereDate('created_at',"<=",$date_upper)
-                ->with("UsersCustomer:users_id,users_nama")
-                ->with("UsersProvider:users_id,users_nama")
-                ->orderBy($sort_column,$sort_type);
-
-            $pemesanan = $pemesanan->paginate($batch_size);
+            $pemesanan = $pemesanan->where("users_provider",$currUser->users_id)
+                ->paginate($batch_size);
             return response()->json([
                 "status" => "success",
                 "message" => "successfuly fetched pemesanan provider",
@@ -89,14 +87,8 @@ class PesananController extends Controller
             // return response()->dro('success',200,'successfuly fetched pemesanan',$pemesanan);
             // return response()->caps('success');
         } else if ($currUser->users_role == "customer") {
-            $pemesanan = HistoryPemesanan::where("users_customer",$currUser->users_id)
-                ->where('created_at',">=",$date_lower)
-                ->where('created_at',"<=",$date_upper)
-                ->orderBy($sort_column,$sort_type)
-                ->with("UsersCustomer:users_id,users_nama")
-                ->with("UsersProvider:users_id,users_nama");
-
-            $pemesanan = $pemesanan->paginate($batch_size);
+            $pemesanan = $pemesanan->where("users_customer",$currUser->users_id)
+                ->paginate($batch_size);
             return response()->json([
                 "status" => "success",
                 "message" => "successfuly fetched pemesanan customer",
@@ -269,7 +261,7 @@ class PesananController extends Controller
             'sort.type' => ['nullable', Rule::in(['asc','desc'])],
             "month" => ["required_with:year","gte:1","lte:12"],
             "year" => ["required_with:month","gt:2010", "lt:3000"],
-            "detail_status" => [Rule::in(['belum_dikirim','terkirim','diterima'])]
+            "detail_status" => [Rule::in(['belum dikirim','terkirim','diterima'])]
         ]);
         if ($validator->fails()) {
             return response() ->json([
@@ -299,6 +291,10 @@ class PesananController extends Controller
                     'Menu'
                 ])
             ->orderBy($sort_column,$sort_type);
+
+        if ($request->has('detail_status')) {
+            $thismonth = $thismonth->where('detail_status',$request->detail_status);
+        }
 
         if ($user->users_role == 'provider') {
             $thismonth = $thismonth->whereRelation('HistoryPemesanan', 'users_provider', $user->users_id);
