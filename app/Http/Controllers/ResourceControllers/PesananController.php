@@ -60,7 +60,7 @@ class PesananController extends Controller
 
         $currUser = $request->user();
         $pemesanan = HistoryPemesanan::orderBy($sort_column,$sort_type)
-            ->with("UsersCustomer:users_id,users_nama")
+            ->with("UsersCustomer:users_id,users_nama,users_alamat,users_telepon")
             ->with("UsersProvider:users_id,users_nama")
             ->where('created_at',"<=",$date_upper)
             ->where('created_at',">=",$date_lower);
