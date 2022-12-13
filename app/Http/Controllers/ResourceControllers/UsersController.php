@@ -46,8 +46,8 @@ class UsersController extends Controller
             ], 
             "users_nama" => ['nullable', "string"],
             "customer_filter" => [
-                    Rule::prohibitedIf($request->user()->users_role !== 'customer'), 
-                    Rule::in(['pernah dipesan','sedang dipesan'])
+                Rule::prohibitedIf($request->user()->users_role !== 'customer'), 
+                Rule::in(['pernah dipesan','sedang dipesan'])
             ]
         ]);
 

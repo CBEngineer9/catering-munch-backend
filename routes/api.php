@@ -8,6 +8,7 @@ use App\Http\Controllers\ResourceControllers\MenuController;
 use App\Http\Controllers\ResourceControllers\PesananController;
 use App\Http\Controllers\ResourceControllers\UsersController;
 use App\Models\Users;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -53,6 +54,31 @@ Route::middleware('auth:sanctum')->get('/mini-me', function (Request $request) {
             "users_nama" => $user->users_nama,
             "users_role" => $user->users_role,
             "users_saldo" => $user->users_saldo,
+        ],
+    ],200);
+});
+Route::middleware(['auth:sanctum','role:provider'])->get('/mystat', function (Request $request) {
+    $user = $request->user();
+    $header_pemesanan = Users::find($user->users_id)->HistoryPemesananProvider();
+    $thismonth_delivery = $header_pemesanan->where('pemesanan_status','diterima')
+        ->withCount('DetailPemesanan')->first();
+    $totalpendapatan = $header_pemesanan->whereDoesntHave('DetailPemesanan',function(Builder $query){
+            $query->where('detail_status','belum dikirim')
+                ->orWhere('detail_status','terkirim');
+        })
+        ->sum('pemesanan_total');
+    $made_delivery = $header_pemesanan->where('pemesanan_status','diterima')
+        ->withCount(['DetailPemesanan' => function(Builder $query) {
+            $query->where('detail_status','terkirim');
+        }])
+        ->first();
+    return response()->json([
+        "status" => 'success',
+        'message' => 'successfully fetched provider stat',
+        "data" => [
+            "thismonth_delivery" => $thismonth_delivery->detail_pemesanan_count,
+            "total_pendapatan" => $totalpendapatan,
+            "made_delivery" => $made_delivery->detail_pemesanan_count,
         ],
     ],200);
 });

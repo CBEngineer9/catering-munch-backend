@@ -62,8 +62,8 @@ class PesananController extends Controller
         $pemesanan = HistoryPemesanan::orderBy($sort_column,$sort_type)
             ->with("UsersCustomer:users_id,users_nama,users_alamat,users_telepon")
             ->with("UsersProvider:users_id,users_nama")
-            ->where('created_at',"<=",$date_upper)
-            ->where('created_at',">=",$date_lower);
+            ->whereDate('created_at',"<=",$date_upper)
+            ->whereDate('created_at',">=",$date_lower);
 
         if ($request->has('pemesanan_status') && $request->pemesanan_status != "") {
             $pemesanan->where("pemesanan_status",$request->pemesanan_status);
@@ -284,6 +284,8 @@ class PesananController extends Controller
 
         $user = $request->user();
         $thismonth = DetailPemesanan::whereMonth('detail_tanggal',$month)->whereYear('detail_tanggal',$year)
+            ->where('detail_status',"belum dikirim")
+            ->whereRelation("HistoryPemesanan",'pemesanan_status','diterima')
             ->with([
                     'HistoryPemesanan:pemesanan_id,users_customer,users_provider' => [
                         'UsersCustomer:users_id,users_nama,users_alamat,users_telepon'
@@ -292,9 +294,9 @@ class PesananController extends Controller
                 ])
             ->orderBy($sort_column,$sort_type);
 
-        if ($request->has('detail_status') && $request->detail_status != "") {
-            $thismonth = $thismonth->where('detail_status',$request->detail_status);
-        }
+        // if ($request->has('detail_status') && $request->detail_status != "") {
+        //     $thismonth = $thismonth->where('detail_status',$request->detail_status);
+        // }
 
         if ($user->users_role == 'provider') {
             $thismonth = $thismonth->whereRelation('HistoryPemesanan', 'users_provider', $user->users_id);
@@ -388,6 +390,8 @@ class PesananController extends Controller
 
         $detailTerpilih->detail_status = 'diterima';
         $detailTerpilih->save();
+
+        // TODO money
 
         return response()->json([
             'status' => "success",
