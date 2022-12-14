@@ -37,7 +37,7 @@ class HistoryLogController extends Controller
         $date_lower = $request->date_lower ?? "1970-01-01";
         $date_upper = $request->date_upper ?? date("Y-m-d");
 
-        $histLog = HistoryLog::orderBy($sort_column,$sort_type);
+        $histLog = HistoryLog::with('Users:users_id,users_nama,users_role')->orderBy($sort_column,$sort_type);
         if ($date_lower) {
             $histLog = $histLog->whereDate('log_timestamp',">=",$date_lower);
         }
