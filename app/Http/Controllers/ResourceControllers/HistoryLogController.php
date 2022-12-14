@@ -19,16 +19,16 @@ class HistoryLogController extends Controller
     {
         // authorization (use admin role middleware)
 
-        $new_menu = new HistoryLog();
-        $tablename = $new_menu->getTable();
+        $new_log = new HistoryLog();
+        $tablename = $new_log->getTable();
         $columns = Schema::getColumnListing($tablename);
         $request->validate([
             'sort' => 'nullable',
             'sort.column' => [ 'nullable' , Rule::in($columns)],
             'sort.type' => ['nullable', Rule::in(['asc','desc'])],
             'batch_size' => ["nullable", "integer", "gt:0"],
-            'date_lower' => ['date', "before:now"],
-            'date_upper' => ['date', "before_or_equal:now"]
+            'date_lower' => ["nullable", 'date', "before:now"],
+            'date_upper' => ["nullable", 'date', "before_or_equal:now"]
         ]);
 
         $sort_column = $request->sort['column'] ?? "log_timestamp";
@@ -47,7 +47,7 @@ class HistoryLogController extends Controller
         $histLog = $histLog->paginate($batch_size);
         return response()->json([
             'status' => "success",
-            'message' => "successfully fetched history menu",
+            'message' => "successfully fetched history log",
             'data' => $histLog
         ],200);
     }

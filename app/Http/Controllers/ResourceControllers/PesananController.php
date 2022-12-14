@@ -9,6 +9,7 @@ use App\Models\HistoryPemesanan;
 use App\Models\Menu;
 use App\Models\Users;
 use App\Notifications\OrderMadeNotif;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -164,18 +165,30 @@ class PesananController extends Controller
         } else if ($request->user()->users_role === 'customer') {
             $users_customer = $request->user()->users_id;
         } 
+        
+        // TODO money check
+        $details = $request->details;
+        $total_price = 0;
+        foreach ($details as $detail) {
+            $total_price += Menu::find($detail['menu_id'])->menu_harga;
+        }
+        // if ($request->user()->users_saldo < $total_price) {
+        //     return response() ->json([
+        //         'status' => 'payment required',
+        //         'message' => 'Your credit is not enough to buy these item'
+        //     ],402);
+        // }
 
         // all good
         DB::beginTransaction();
         try {
-            $details = $request->details;
             $total = 0;
             $historyPemesanan = new HistoryPemesanan();
             $historyPemesanan->users_provider = $request->users_provider;
             $historyPemesanan->users_customer = $users_customer;
             $historyPemesanan->pemesanan_status = 'menunggu';
             $historyPemesanan->pemesanan_jumlah = count($details);
-            $historyPemesanan->pemesanan_total = 0;
+            $historyPemesanan->pemesanan_total = $total_price;
             $historyPemesanan->pemesanan_rating = 0;
             $historyPemesanan->save();
             
@@ -197,8 +210,6 @@ class PesananController extends Controller
                 $detail_model->detail_status = $status;
                 $detail_model->save();
             }
-            $historyPemesanan->pemesanan_total = $total;
-            $historyPemesanan->save();
 
             DB::commit();
         } catch (\Throwable $th) {
@@ -388,14 +399,59 @@ class PesananController extends Controller
         $headerTerpilih = $detailTerpilih->HistoryPemesanan()->first();
         $this->authorize('terima',$headerTerpilih);
 
-        $detailTerpilih->detail_status = 'diterima';
-        $detailTerpilih->save();
+        // checks
+        if ($detailTerpilih->detail_status === 'belum dikirim') {
+            return response()->json([
+                'status' => "bad request",
+                'message' => "order has not been delivered yet",
+            ],400);
+        } elseif ($detailTerpilih->detail_status === 'diterima') {
+            return response()->json([
+                'status' => "bad request",
+                'message' => "order has already been received",
+            ],400);
+        }
 
-        // TODO money
+        DB::beginTransaction();
+        try {
+            $detailTerpilih->detail_status = 'diterima';
+            $detailTerpilih->save();
+
+            // check all received
+            $is_order_complete = DetailPemesanan::where('pemesanan_id',$headerTerpilih->pemesanan_id)
+                ->where('detail_status','!=','diterima')
+                ->doesntExist();
+            
+            if ($is_order_complete) {
+                // update status to complete
+                $headerTerpilih->pemesanan_status = 'selesai';
+                $headerTerpilih->save();
+
+                // transfer money
+                $total = $headerTerpilih->pemesanan_total;
+                $headerTerpilih->UsersCustomer->users_saldo -= $total;
+                $headerTerpilih->UsersProvider->users_saldo += $total;
+
+                $headerTerpilih->UsersCustomer->save();
+                $headerTerpilih->UsersProvider->save();
+            }
+
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollback();
+            return response()->json([
+                'status' => "server error",
+                'message' => "mysql error",
+                "errors" => [
+                    'mysql_error' => $th->getMessage()
+                ]
+            ],500);
+        }
 
         return response()->json([
             'status' => "success",
             'message' => "successfully changed pesanan status to received",
+            'order_complete' => $is_order_complete
         ],200);
     }
 
