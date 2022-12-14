@@ -20,6 +20,7 @@ class RegisterController extends Controller
             "users_alamat" => "required",
             "users_telepon" => "required | numeric | digits_between:8,12 | unique:users,users_telepon",
             "users_role" => ["required", Rule::in(["customer","provider"])],
+            "users_desc" => [Rule::requiredIf($request->users_role === "provider"), "nullable", "string"],
             "tnc" => "accepted",
         ]);
 
@@ -38,6 +39,7 @@ class RegisterController extends Controller
             "users_password" => Hash::make($request->users_password),
             "users_alamat" => $request->users_alamat,
             "users_telepon" => $request->users_telepon,
+            'users_desc' => $request->users_desc,
             "users_role" => $request->users_role,
             "users_status" => $request->users_role == "customer" ? "aktif" : "menunggu"
         ]);

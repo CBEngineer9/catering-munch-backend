@@ -366,12 +366,14 @@ class UsersController extends Controller
         $this->authorize('update',$userTerpilih);
         
         $validator = Validator::make($request->all(),[
-            "users_nama" => "nullable",
-            "users_email" => "nullable | email | unique:users,users_email",
-            "users_password" => "nullable | confirmed",
-            "users_alamat" => "nullable",
+            "users_nama" => "nullable|string|max:255",
+            "users_email" => "nullable | email | unique:users,users_email|max:255",
+            "users_password" => "nullable | confirmed|max:255",
+            "users_alamat" => "nullable|max:255",
             "users_telepon" => "nullable | numeric | digits_between:8,12 | unique:users,users_telepon",
-            "users_role" => ["nullable", Rule::in(["customer","provider"])],
+            "users_role" => ["nullable", Rule::prohibitedIf($request->user()->users_role !== "admin"), Rule::in(["customer","provider"])],
+            "users_desc" => [Rule::requiredIf($request->user()->users_role === "provider"), "nullable", "string", "max:255"],
+            "users_saldo" => [Rule::prohibitedIf($request->user()->users_role !== "admin"), "integer", "max_digits:8"]
         ]);
         if ($validator->fails()) {
             return response() ->json([

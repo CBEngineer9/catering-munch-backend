@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('users_nama');
             $table->string('users_alamat');
             $table->string('users_password');
-            $table->string('users_desc')->nullable();
+            $table->text('users_desc')->nullable();
             $table->bigInteger('users_saldo')->default(0);
             $table->enum('users_role', ["admin", "provider", "customer"])->default("customer");
             $table->enum('users_status', ["banned", "aktif", "menunggu"])->default("menunggu");

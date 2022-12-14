@@ -36,6 +36,20 @@ class UsersPolicy
     }
 
     /**
+     * Determine whether the user can update the model.
+     *
+     * @param  \App\Models\Users  $users
+     * @param  \App\Models\Menu  $menu
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function update(Users $users, Users $other_user)
+    {
+        return $users->users_id === $other_user->users_id
+        ? Response::allow()
+        : Response::deny('You do not own this resource.');
+    }
+
+    /**
      * Determine whether the user can view the model.
      *
      * @param  \App\Models\Users  $users
