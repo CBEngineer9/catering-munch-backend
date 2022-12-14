@@ -372,7 +372,7 @@ class UsersController extends Controller
             "users_alamat" => "nullable|max:255",
             "users_telepon" => "nullable | numeric | digits_between:8,12 | unique:users,users_telepon",
             "users_role" => ["nullable", Rule::prohibitedIf($request->user()->users_role !== "admin"), Rule::in(["customer","provider"])],
-            "users_desc" => [Rule::requiredIf($request->user()->users_role === "provider"), "nullable", "string", "max:255"],
+            "users_desc" => ["nullable", "string", "max:255"],
             "users_saldo" => [Rule::prohibitedIf($request->user()->users_role !== "admin"), "integer", "max_digits:8"]
         ]);
         if ($validator->fails()) {
