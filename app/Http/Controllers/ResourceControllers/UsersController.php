@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\ResourceControllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\DetailPemesanan;
 use App\Models\Users;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Schema;
@@ -159,6 +161,102 @@ class UsersController extends Controller
             "status" => 'success',
             "data" => $listUser
         ],200);
+    }
+
+    /**
+     * Get full profile
+     *
+     * @return \Illuminate\Http\Response
+     **/
+    public function getProfile(Request $request) {
+        return response()->json([
+            "status" => 'success',
+            'message' => 'successfully fetched current user',
+            "data" => $request->user(),
+        ],200);
+    }
+
+    /**
+     * Get mini profile
+     *
+     * @return \Illuminate\Http\Response
+     **/
+    public function getProfileMini(Request $request) {
+        // $user = new Users((Array)json_decode($request->user()));
+        $user = $request->user();
+        return response()->json([
+            "status" => 'success',
+            'message' => 'successfully fetched current user',
+            "data" => [
+                "users_id" => $user->users_id,
+                "users_nama" => $user->users_nama,
+                "users_role" => $user->users_role,
+                "users_saldo" => $user->users_saldo,
+            ],
+        ],200);
+    }
+
+    /**
+     * Get user status. Only supported for admin and provider
+     *
+     * @return \Illuminate\Http\Response
+     **/
+    public function getStatus(Request $request) {
+        $user = $request->user();
+        if ($user->users_role === 'admin') {
+            $customer = Users::where('users_role','customer')->count();
+            $provider = Users::where('users_role','provider')->where('users_status','!=','menunggu')->count();
+            $unverified = Users::where('users_role','provider')->where('users_status','menunggu')->count();
+    
+            return response()->json([
+                "status" => 'success',
+                'message' => 'successfully fetched admin stat',
+                "data" => [
+                    "customers_count" => $customer,
+                    "providers_count" => $provider,
+                    "unverified_count" => $unverified,
+                ],
+            ],200);
+        } elseif ($user->users_role === 'provider') {
+            // $header_pemesanan = Users::find($user->users_id)->HistoryPemesananProvider();
+            // $thismonth_delivery = Users::find($user->users_id)->HistoryPemesananProvider()
+            //     ->where('pemesanan_status','diterima')
+            //     ->with('DetailPemesanan')->get();
+            $thismonth_delivery = DetailPemesanan::whereHas('HistoryPemesanan', function(Builder $query) use ($user) {
+                    $query->whereRelation('UsersProvider','users_id',$user->users_id);
+                })
+                ->whereRelation('HistoryPemesanan','pemesanan_status','diterima')
+                ->count();
+            $totalpendapatan = Users::find($user->users_id)->HistoryPemesananProvider()
+                ->whereDoesntHave('DetailPemesanan',function(Builder $query){
+                    $query->where('detail_status','belum dikirim')
+                        ->orWhere('detail_status','terkirim');
+                })
+                ->sum('pemesanan_total');
+            // return $totalpendapatan;
+            // return $header_pemesanan->get();
+            // $made_delivery = Users::find($user->users_id)->HistoryPemesananProvider()
+            //     ->where('pemesanan_status','diterima')
+            //     ->withCount(['DetailPemesanan' => function(Builder $query) {
+            //         $query->where('detail_status','terkirim');
+            //     }])
+            //     ->get();
+            $made_delivery = DetailPemesanan::whereHas('HistoryPemesanan', function(Builder $query) use ($user) {
+                    $query->whereRelation('UsersProvider','users_id',$user->users_id);
+                })
+                ->whereRelation('HistoryPemesanan','pemesanan_status','diterima')
+                ->where("detail_status",'!=','belum dikirim')
+                ->count();
+            return response()->json([
+                "status" => 'success',
+                'message' => 'successfully fetched provider stat',
+                "data" => [
+                    "thismonth_delivery" => $thismonth_delivery,
+                    "total_pendapatan" => $totalpendapatan,
+                    "made_delivery" => $made_delivery,
+                ],
+            ],200);
+        }
     }
 
     /**

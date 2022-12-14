@@ -7,8 +7,6 @@ use App\Http\Controllers\ResourceControllers\HistoryMenuController;
 use App\Http\Controllers\ResourceControllers\MenuController;
 use App\Http\Controllers\ResourceControllers\PesananController;
 use App\Http\Controllers\ResourceControllers\UsersController;
-use App\Models\Users;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -29,75 +27,16 @@ use Illuminate\Support\Facades\Route;
 // [x] history menu
 // [x] history log
 // [x] Plocy users
+// [x] Tidy up
 
 // CHANGELOG 
-// - admin group gone
-// - added log 
 
 // USER UTILITY //////////////////////////////////////////////////////////////
 // untuk cek siapa yang login
-Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
-    return response()->json([
-        "status" => 'success',
-        'message' => 'successfully fetched current user',
-        "data" => $request->user(),
-    ],200);
-});
-Route::middleware('auth:sanctum')->get('/mini-me', function (Request $request) {
-    // $user = new Users((Array)json_decode($request->user()));
-    $user = $request->user();
-    return response()->json([
-        "status" => 'success',
-        'message' => 'successfully fetched current user',
-        "data" => [
-            "users_id" => $user->users_id,
-            "users_nama" => $user->users_nama,
-            "users_role" => $user->users_role,
-            "users_saldo" => $user->users_saldo,
-        ],
-    ],200);
-});
-Route::middleware(['auth:sanctum','role:provider,admin'])->get('/mystat', function (Request $request) {
-    $user = $request->user();
-    if ($user->users_role === 'admin') {
-        $customer = Users::where('users_role','customer')->count();
-        $provider = Users::where('users_role','provider')->where('users_status','!=','menunggu')->count();
-        $unverified = Users::where('users_role','provider')->where('users_status','menunggu')->count();
-
-        return response()->json([
-            "status" => 'success',
-            'message' => 'successfully fetched admin stat',
-            "data" => [
-                "customers_count" => $customer,
-                "providers_count" => $provider,
-                "unverified_count" => $unverified,
-            ],
-        ],200);
-    } elseif ($user->users_role === 'provider') {
-        $header_pemesanan = Users::find($user->users_id)->HistoryPemesananProvider();
-        $thismonth_delivery = $header_pemesanan->where('pemesanan_status','diterima')
-            ->withCount('DetailPemesanan')->first();
-        $totalpendapatan = $header_pemesanan->whereDoesntHave('DetailPemesanan',function(Builder $query){
-                $query->where('detail_status','belum dikirim')
-                    ->orWhere('detail_status','terkirim');
-            })
-            ->sum('pemesanan_total');
-        $made_delivery = $header_pemesanan->where('pemesanan_status','diterima')
-            ->withCount(['DetailPemesanan' => function(Builder $query) {
-                $query->where('detail_status','terkirim');
-            }])
-            ->first();
-        return response()->json([
-            "status" => 'success',
-            'message' => 'successfully fetched provider stat',
-            "data" => [
-                "thismonth_delivery" => $thismonth_delivery->detail_pemesanan_count,
-                "total_pendapatan" => $totalpendapatan,
-                "made_delivery" => $made_delivery->detail_pemesanan_count,
-            ],
-        ],200);
-    }
-});
+Route::middleware('auth:sanctum')->get('/me', [UsersController::class, 'getProfile']);
+Route::middleware('auth:sanctum')->get('/mini-me', [UsersController::class, 'getProfileMini']);
+// cek status admin dan provider
+Route::middleware(['auth:sanctum','role:provider,admin'])->get('/mystat', [UsersController::class, 'getStatus']);
 
 // Tembak dulu sanctum/csrf-cookie untuk dapat csrf token
 // https://laravel.com/docs/9.x/sanctum#cors-and-cookies
