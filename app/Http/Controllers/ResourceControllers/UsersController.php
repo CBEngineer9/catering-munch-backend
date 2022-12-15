@@ -4,10 +4,12 @@ namespace App\Http\Controllers\ResourceControllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\DetailPemesanan;
+use App\Models\HistoryTopup;
 use App\Models\Users;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -395,6 +397,90 @@ class UsersController extends Controller
             'status' => 'created',
             'message' => "succesfully updated user"
         ],201);
+    }
+
+    /**
+     * Customer topup self e-money
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     **/
+    public function topup(Request $request)
+    {
+        $validator = Validator::make($request->all(),[
+            "password" => "required|current_password:web",
+            "topup_amount" => "required|integer|max_digits:8",
+            "token_id" => "required", // TODO
+        ]);
+        if ($validator->fails()) {
+            return response() ->json([
+                'status' => 'unprocessable content',
+                'message' => 'There are errors found on the data you have entered',
+                'errors' => $validator->errors(),
+            ],422);
+        }
+
+        //all good
+        $user = Users::find($request->user()->users_id);
+        // $user->users_saldo += $request->topup_amount;
+        // $user->save();
+
+        $hist_topup =  new HistoryTopup();
+        $hist_topup->topup_nominal = $request->topup_amount;
+        $hist_topup->topup_tanggal = now();
+        $hist_topup->topup_response = "processing";
+        $hist_topup->user_id = $user->users_id;
+        $hist_topup->save();
+
+        $auth_string = base64_encode(env('MIDTRANS_SERVER_KEY').":");
+
+        $midtrans_response = Http::withHeaders([
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'Authorization' => "basic $auth_string"
+        ])->post('https://api.sandbox.midtrans.com/v2/charge', [
+            "payment_type" => "credit_card",
+            "transaction_details"=> [
+                "order_id" => "$hist_topup->topup_id",
+                "gross_amount"=> $request->topup_amount
+            ],
+            "credit_card" => [
+                "token_id" => "$request->token_id",
+                "authentication"=> true,
+            ],
+            "customer_details" => [
+                "nama" => $user->user_nama,
+                "email" => $user->user_email,
+                "phone" => $user->user_telepon,
+            ]
+        ]);
+
+        $hist_topup->topup_response = $midtrans_response->status_code;
+        $hist_topup->save();
+
+        // TODO error handling
+        
+        return response()->json([
+            "status" => "success",
+            "message" => "successfully top up",
+            "data"  => [
+                "topup_amount" => $user->users_saldo,
+                "midtrans_response" => $midtrans_response
+            ]
+        ]);
+    }
+
+    /**
+     * Midtrans topup callback
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     **/
+    public function topupCallback(Request $request)
+    {
+        
     }
 
     /**
