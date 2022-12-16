@@ -31,7 +31,6 @@ class HistoryMenuController extends Controller
         $request->validate([
             "provider_id" => [
                 Rule::prohibitedIf(!$currUser->isAdministrator()), 
-                Rule::requiredIf($currUser->isAdministrator()), 
                 "exists:App\Models\Users,users_id", 
                 new UserRoleRule("provider")],
             'sort' => 'nullable',
@@ -51,8 +50,10 @@ class HistoryMenuController extends Controller
         $listMenu = HistoryMenu::orderBy($sort_column,$sort_type);
         
         // show only owned menu, unless specified by ADMIN
-        if ($request->has('provider_id')) {
-            $listMenu = $listMenu->whereRelation("Menu",'users_id',$request->provider_id);
+        if ($request->user()->users_role === 'admin') {
+            if ($request->has('provider_id')) {
+                $listMenu = $listMenu->whereRelation("Menu",'users_id',$request->provider_id);
+            }
         } else {
             $listMenu = $listMenu->whereRelation("Menu",'users_id',$userId);
         }
