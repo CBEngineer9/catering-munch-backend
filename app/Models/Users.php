@@ -22,6 +22,7 @@ class Users extends Authenticatable
         'users_nama',
         'users_alamat',
         'users_password',
+        'users_desc',
         'users_saldo',
         'users_role',
         'users_status'
