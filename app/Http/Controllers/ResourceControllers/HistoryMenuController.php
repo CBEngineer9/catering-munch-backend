@@ -59,10 +59,10 @@ class HistoryMenuController extends Controller
         }
 
         if ($date_lower) {
-            $listMenu = $listMenu->where('updated_at',">=",$date_lower);
+            $listMenu = $listMenu->whereDate('updated_at',">=",$date_lower);
         }
         if ($date_upper) {
-            $listMenu = $listMenu->where('updated_at',"<=",$date_upper);
+            $listMenu = $listMenu->whereDate('updated_at',"<=",$date_upper);
         }
         $listMenu = $listMenu->paginate($batch_size);
         return response()->json([
