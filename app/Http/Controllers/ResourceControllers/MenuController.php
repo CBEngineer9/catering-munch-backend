@@ -36,6 +36,7 @@ class MenuController extends Controller
             'sort.type' => ['nullable', Rule::in(['asc','desc'])],
             'batch_size' => ["nullable", "integer", "gt:0"],
             'menu_nama' =>  ['nullable', "string"],
+            "menu_status" => ['nullable', Rule::in(['tersedia','tidak tersedia'])]
         ]);
 
         $sort_column = $request->sort['column'] ?? "menu_id";
@@ -48,6 +49,9 @@ class MenuController extends Controller
         }
         if ($request->has('menu_nama')) {
             $listMenu = $listMenu->where('menu_nama','like','%'.$request->menu_nama.'%');
+        }
+        if ($request->has('menu_status') && $request->menu_status != null) {
+            $listMenu = $listMenu->where('menu_status',$request->menu_status);
         }
         $listMenu = $listMenu->paginate($batch_size);
         return response()->json([
