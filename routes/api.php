@@ -4,6 +4,7 @@ use App\Http\Controllers\LoginRegis\LoginController;
 use App\Http\Controllers\LoginRegis\RegisterController;
 use App\Http\Controllers\ResourceControllers\HistoryLogController;
 use App\Http\Controllers\ResourceControllers\HistoryMenuController;
+use App\Http\Controllers\ResourceControllers\HistoryTopupController;
 use App\Http\Controllers\ResourceControllers\MenuController;
 use App\Http\Controllers\ResourceControllers\PesananController;
 use App\Http\Controllers\ResourceControllers\UsersController;
@@ -116,7 +117,11 @@ Route::resource('pesanan', PesananController::class);
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
+/// HISTORY TOPUP //////////////////////////////////////////////////////////////
+Route::resource('historyTopup', HistoryTopupController::class);
+// avaliable actions
+// index
+////////////////////////////////////////////////////////////////////////////////
 
 
 ///////////////////////////////////////////////////////////////

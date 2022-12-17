@@ -207,6 +207,7 @@ class UsersController extends Controller
     public function topup(Request $request)
     {
         // No authorize, because self edit
+        // TODO authorize only customer?
         
         $validator = Validator::make($request->all(),[
             "password" => "required|current_password:web",
