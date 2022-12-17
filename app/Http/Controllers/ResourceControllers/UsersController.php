@@ -197,6 +197,95 @@ class UsersController extends Controller
             ],
         ],200);
     }
+    
+    /**
+     * Customer topup self e-money
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     **/
+    public function topup(Request $request)
+    {
+        // No authorize, because self edit
+        // TODO authorize only customer?
+        
+        $validator = Validator::make($request->all(),[
+            "password" => "required|current_password:web",
+            "topup_amount" => "required|integer|max_digits:8",
+            // "token_id" => "required", // TODO
+        ]);
+        if ($validator->fails()) {
+            return response() ->json([
+                'status' => 'unprocessable content',
+                'message' => 'There are errors found on the data you have entered',
+                'errors' => $validator->errors(),
+            ],422);
+        }
+
+        //all good
+        $user = Users::find($request->user()->users_id);
+        $user->users_saldo += $request->topup_amount;
+        $user->save();
+
+        $hist_topup =  new HistoryTopup();
+        $hist_topup->topup_nominal = $request->topup_amount;
+        $hist_topup->topup_tanggal = now();
+        $hist_topup->topup_response = "success";
+        $hist_topup->topup_response_code = 200;
+        $hist_topup->users_id = $user->users_id;
+        $hist_topup->save();
+
+        // $auth_string = base64_encode(env('MIDTRANS_SERVER_KEY').":");
+
+        // $midtrans_response = Http::withHeaders([
+        //     'Accept' => 'application/json',
+        //     'Content-Type' => 'application/json',
+        //     'Authorization' => "basic $auth_string"
+        // ])->post('https://api.sandbox.midtrans.com/v2/charge', [
+        //     "payment_type" => "credit_card",
+        //     "transaction_details"=> [
+        //         "order_id" => "$hist_topup->topup_id",
+        //         "gross_amount"=> $request->topup_amount
+        //     ],
+        //     "credit_card" => [
+        //         "token_id" => "$request->token_id",
+        //         "authentication"=> true,
+        //     ],
+        //     "customer_details" => [
+        //         "nama" => $user->user_nama,
+        //         "email" => $user->user_email,
+        //         "phone" => $user->user_telepon,
+        //     ]
+        // ]);
+
+        // $hist_topup->topup_response = $midtrans_response->status_code;
+        // $hist_topup->save();
+
+        // // TODO error handling
+        
+        return response()->json([
+            "status" => "success",
+            "message" => "successfully top up",
+            "data"  => [
+                "topup_amount" => $request->topup_amount,
+                "users_saldo" => $user->users_saldo,
+                // "midtrans_response" => $midtrans_response
+            ]
+        ]);
+    }
+
+    /**
+     * Midtrans topup callback
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     **/
+    public function topupCallback(Request $request)
+    {
+        
+    }
 
     /**
      * Get user status. Only supported for admin and provider

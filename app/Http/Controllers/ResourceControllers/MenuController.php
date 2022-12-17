@@ -32,10 +32,11 @@ class MenuController extends Controller
         $request->validate([
             "provider_id" => ["nullable", "exists:App\Models\Users,users_id", new UserRoleRule("provider")],
             'sort' => 'nullable',
-            'sort.column' => [ 'nullable' , Rule::in($columns)],
+            'sort.column' => ['nullable' , Rule::in($columns)],
             'sort.type' => ['nullable', Rule::in(['asc','desc'])],
             'batch_size' => ["nullable", "integer", "gt:0"],
             'menu_nama' =>  ['nullable', "string"],
+            "menu_status" => ['nullable', Rule::in(['tersedia','tidak tersedia'])]
         ]);
 
         $sort_column = $request->sort['column'] ?? "menu_id";
@@ -43,13 +44,16 @@ class MenuController extends Controller
         $batch_size = $request->batch_size ?? 10;
 
         $listMenu = Menu::orderBy($sort_column,$sort_type);
-        if ($request->has('provider_id')) {
+        if ($request->has('provider_id') && $request->provider_id != null) {
             $listMenu = $listMenu->where('users_id',$request->provider_id);
         }
         if ($request->has('menu_nama')) {
             $listMenu = $listMenu->where('menu_nama','like','%'.$request->menu_nama.'%');
         }
-        $listMenu = $listMenu->paginate($batch_size);
+        if ($request->has('menu_status') && $request->menu_status != null) {
+            $listMenu = $listMenu->where('menu_status',$request->menu_status);
+        }
+        $listMenu = $listMenu->with('Users:users_id,users_nama')->paginate($batch_size);
         return response()->json([
             'status' => "success",
             'message' => "successfully fetched menu",
