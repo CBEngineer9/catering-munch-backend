@@ -32,7 +32,7 @@ class MenuController extends Controller
         $request->validate([
             "provider_id" => ["nullable", "exists:App\Models\Users,users_id", new UserRoleRule("provider")],
             'sort' => 'nullable',
-            'sort.column' => [ 'nullable' , Rule::in($columns)],
+            'sort.column' => ['nullable' , Rule::in($columns)],
             'sort.type' => ['nullable', Rule::in(['asc','desc'])],
             'batch_size' => ["nullable", "integer", "gt:0"],
             'menu_nama' =>  ['nullable', "string"],
@@ -43,7 +43,7 @@ class MenuController extends Controller
         $batch_size = $request->batch_size ?? 10;
 
         $listMenu = Menu::orderBy($sort_column,$sort_type);
-        if ($request->has('provider_id')) {
+        if ($request->has('provider_id') && $request->provider_id != null) {
             $listMenu = $listMenu->where('users_id',$request->provider_id);
         }
         if ($request->has('menu_nama')) {
