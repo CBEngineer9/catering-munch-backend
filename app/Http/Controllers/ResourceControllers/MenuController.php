@@ -53,7 +53,7 @@ class MenuController extends Controller
         if ($request->has('menu_status') && $request->menu_status != null) {
             $listMenu = $listMenu->where('menu_status',$request->menu_status);
         }
-        $listMenu = $listMenu->paginate($batch_size);
+        $listMenu = $listMenu->with('Users:users_id,users_nama')->paginate($batch_size);
         return response()->json([
             'status' => "success",
             'message' => "successfully fetched menu",
