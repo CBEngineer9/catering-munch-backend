@@ -17,7 +17,8 @@ return new class extends Migration
             $table->id('topup_id');
             $table->bigInteger('topup_nominal');
             $table->dateTime('topup_tanggal');
-            $table->integer('topup_response');
+            $table->integer('topup_response_code');
+            $table->string('topup_response');
             $table->unsignedBigInteger('users_id');
             $table->foreign('users_id')->references('users_id')->on('users');
             $table->timestamp('created_at')->useCurrent();

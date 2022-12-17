@@ -44,6 +44,9 @@ Route::middleware(['auth:sanctum','role:provider,admin'])->get('/mystat', [Users
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/register', [RegisterController::class, 'register'])->name('register');
 Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'logout']);
+Route::middleware('auth:sanctum')->patch('/topup', [UsersController::class, 'topup']);
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 

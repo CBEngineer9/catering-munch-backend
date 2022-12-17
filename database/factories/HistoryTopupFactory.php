@@ -21,7 +21,8 @@ class HistoryTopupFactory extends Factory
         return [
             "topup_nominal" => fake()->numberBetween(1,100) * 1000,
             "topup_tanggal" => fake()->dateTimeBetween("-10 days"),
-            "topup_response" => 200,
+            "topup_response_code" => 200,
+            "topup_response" => "success",
             "users_id" => Users::factory()->customer(),
         ];
     }
