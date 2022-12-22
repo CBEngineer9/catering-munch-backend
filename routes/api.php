@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\LoginRegis\LoginController;
 use App\Http\Controllers\LoginRegis\RegisterController;
+use App\Http\Controllers\ResourceControllers\CartController;
 use App\Http\Controllers\ResourceControllers\HistoryLogController;
 use App\Http\Controllers\ResourceControllers\HistoryMenuController;
 use App\Http\Controllers\ResourceControllers\HistoryTopupController;
@@ -98,6 +99,13 @@ Route::resource('menu', MenuController::class);
 
 // HISTORY MENU ////////////////////////////////////////////////////////////////
 Route::resource('historyMenu', HistoryMenuController::class);
+// avaliable actions
+// index
+////////////////////////////////////////////////////////////////////////////////
+
+
+// CART ////////////////////////////////////////////////////////////////////////
+Route::resource('cart', CartController::class);
 // avaliable actions
 // index
 ////////////////////////////////////////////////////////////////////////////////
