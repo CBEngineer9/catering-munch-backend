@@ -87,9 +87,9 @@ Route::resource('log', HistoryLogController::class);
 
 
 // MENU ////////////////////////////////////////////////////////////////////////
-Route::prefix('menu')->group(function () {
-    Route::patch('/{id}/rate', [PesananController::class, 'rate']);
-});
+// Route::prefix('menu')->group(function () {
+//     Route::patch('/{id}/rate', [PesananController::class, 'rate']);
+// });
 Route::resource('menu', MenuController::class);
 // avaliable actions
 // index, store, show, update, destroy
@@ -110,6 +110,7 @@ Route::prefix('pesanan')->group(function () {
     Route::post('{id}/accept', [PesananController::class,'accept']);
     Route::post('deliver/{detail_id}', [PesananController::class,'kirim']);
     Route::post('receive/{detail_id}', [PesananController::class,'terima']);
+    Route::patch('/{id}/rate', [PesananController::class, 'rate']);
 });
 Route::resource('pesanan', PesananController::class);
 // avaliable actions
