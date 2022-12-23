@@ -15,7 +15,6 @@ class Cart extends Model
         "users_customer",
         "menu_id",
         "cart_jumlah",
-        "cart_total",
         "cart_tanggal",
     ];
 

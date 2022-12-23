@@ -88,9 +88,6 @@ Route::resource('log', HistoryLogController::class);
 
 
 // MENU ////////////////////////////////////////////////////////////////////////
-// Route::prefix('menu')->group(function () {
-//     Route::patch('/{id}/rate', [PesananController::class, 'rate']);
-// });
 Route::resource('menu', MenuController::class);
 // avaliable actions
 // index, store, show, update, destroy
@@ -105,9 +102,12 @@ Route::resource('historyMenu', HistoryMenuController::class);
 
 
 // CART ////////////////////////////////////////////////////////////////////////
+Route::prefix('cart')->group(function () {
+    Route::delete('/clear', [CartController::class, 'clear']);
+});
 Route::resource('cart', CartController::class);
 // avaliable actions
-// index
+// index, store, show, update, destroy
 ////////////////////////////////////////////////////////////////////////////////
 
 
