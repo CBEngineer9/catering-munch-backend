@@ -50,13 +50,15 @@ class CartController extends Controller
                     $query->where("users_customer",$user->users_id);
                 })
                 ->with([
-                    "CartProvider" => [
-                            "Menu:menu_id,menu_nama"
-                        ]
+                        "CartProvider" => function ($query) use ($user) {
+                            $query->where("users_customer",$user->users_id)
+                                ->with("Menu:menu_id,menu_nama");
+                        }
                     ])
                 ->withSum('CartProvider as sum_cart_jumlah', "cart_jumlah")
                 ->withSum('CartProvider as sum_cart_total', "cart_total")
                 ->get(["users_id","users_nama"]);
+                // TODO beautyfy result
         }
 
         return response()->json([

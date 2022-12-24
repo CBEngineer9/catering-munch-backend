@@ -10,6 +10,8 @@ use App\Http\Controllers\ResourceControllers\HistoryTopupController;
 use App\Http\Controllers\ResourceControllers\MenuController;
 use App\Http\Controllers\ResourceControllers\PesananController;
 use App\Http\Controllers\ResourceControllers\UsersController;
+use App\Models\DetailPemesanan;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -146,6 +148,21 @@ Route::middleware(['auth:sanctum', 'role:admin,provider'])->prefix('report')->gr
 ///////////////////////////////////////////////////////////////
 // DEPRECATED ZONE
 ///////////////////////////////////////////////////////////////
+
+Route::get('test', function () {
+    return DetailPemesanan::whereHas('HistoryPemesanan',function(Builder $query) {
+        $query->where('pemesanan_status','selesai')
+            // ->where('users_provider',$this->provider_id);
+            ;
+    })
+    ->with("Menu:menu_id,menu_nama")
+    // ->addSelect(DB::raw('sum(detail_jumlah) as total_terjual, sum(detail_total) as total_penjualan'))
+    // ->groupBy(['menu_id'])
+    // ->orderBy('total_penjualan')
+    ->get()
+    ->flatten(1)
+    ;
+});
 
 // endpoint admin
 Route::prefix('admin')->group(function () {

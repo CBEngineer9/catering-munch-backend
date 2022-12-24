@@ -52,10 +52,10 @@ class PenjualanTerbanyakReport implements FromCollection, WithHeadings
                     // ->where('users_provider',$this->provider_id);
                     ;
             })
-            // ->with("Menu:menu_id,menu_nama")
-            ->addSelect(DB::raw('sum(detail_jumlah) as total_terjual, sum(detail_total) as total_penjualan'))
-            ->groupBy(['menu_id'])
-            ->orderBy('total_penjualan')
+            ->with("Menu:menu_id,menu_nama")
+            // ->addSelect(DB::raw('sum(detail_jumlah) as total_terjual, sum(detail_total) as total_penjualan'))
+            // ->groupBy(['menu_id'])
+            // ->orderBy('total_penjualan')
             ->get()
             ->flatten(1)
             ;
