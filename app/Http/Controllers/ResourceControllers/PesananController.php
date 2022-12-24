@@ -296,6 +296,7 @@ class PesananController extends Controller
         $user = $request->user();
         $thismonth = DetailPemesanan::whereMonth('detail_tanggal',$month)->whereYear('detail_tanggal',$year)
             ->where('detail_status',"belum dikirim")
+            ->orWhere('detail_status',"terkirim")
             ->whereRelation("HistoryPemesanan",'pemesanan_status','diterima')
             ->with([
                     'HistoryPemesanan:pemesanan_id,users_customer,users_provider' => [
