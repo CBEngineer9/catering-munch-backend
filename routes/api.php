@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\LoginRegis\LoginController;
 use App\Http\Controllers\LoginRegis\RegisterController;
+use App\Http\Controllers\ResourceControllers\ReportController;
 use App\Http\Controllers\ResourceControllers\CartController;
 use App\Http\Controllers\ResourceControllers\HistoryLogController;
 use App\Http\Controllers\ResourceControllers\HistoryMenuController;
@@ -80,8 +81,7 @@ Route::resource('users', UsersController::class)
 
 
 // LOG /////////////////////////////////////////////////////////////////////////
-// TODO middlewre
-Route::resource('log', HistoryLogController::class);
+Route::middleware(['auth:sanctum','role:admin'])->resource('log', HistoryLogController::class);
 // avaliable actions
 // index
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,6 +131,16 @@ Route::resource('historyTopup', HistoryTopupController::class);
 // avaliable actions
 // index
 ////////////////////////////////////////////////////////////////////////////////
+
+
+/// REPORT /////////////////////////////////////////////////////////////////////
+// TODO admin
+Route::middleware(['auth:sanctum', 'role:admin,provider'])->prefix('report')->group(function () {
+    Route::get('/penjualan', [ReportController::class, 'penjualanTerbanyak']);
+});
+////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 ///////////////////////////////////////////////////////////////
