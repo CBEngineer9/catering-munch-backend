@@ -39,7 +39,7 @@ class UsersController extends Controller
             'batch_size' => ["integer", "gt:0"],
             "users_role" => [
                 'nullable', 
-                Rule::prohibitedIf($request->user()->users_role !== 'admin'), 
+                // Rule::prohibitedIf($request->user()->users_role !== 'admin'), 
                 Rule::in(['admin','customer','provider'])
             ],
             "users_status" => [
