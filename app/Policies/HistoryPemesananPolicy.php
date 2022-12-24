@@ -60,7 +60,7 @@ class HistoryPemesananPolicy
      */
     public function viewDelivery(Users $users)
     {
-        return $users->users_role === 'provider'
+        return $users->users_role === 'provider' || $users->users_role === 'customer'
         ? Response::allow()
         : Response::deny('You cannot view this resource.');
     }
