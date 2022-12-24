@@ -295,8 +295,10 @@ class PesananController extends Controller
 
         $user = $request->user();
         $thismonth = DetailPemesanan::whereMonth('detail_tanggal',$month)->whereYear('detail_tanggal',$year)
-            ->where('detail_status',"belum dikirim")
-            ->orWhere('detail_status',"terkirim")
+            ->where(function (Builder $query) {
+                $query->where('detail_status',"belum dikirim")
+                    ->orWhere('detail_status',"terkirim");
+            })
             ->whereRelation("HistoryPemesanan",'pemesanan_status','diterima')
             ->with([
                     'HistoryPemesanan:pemesanan_id,users_customer,users_provider' => [
@@ -304,13 +306,14 @@ class PesananController extends Controller
                     ],
                     'Menu'
                 ])
-            ->orderBy($sort_column,$sort_type);
+            ;
 
         // if ($request->has('detail_status') && $request->detail_status != "") {
         //     $thismonth = $thismonth->where('detail_status',$request->detail_status);
         // }
+        // return $thismonth->get();
 
-        if ($user->users_role == 'provider') {
+        if ($user->users_role === 'provider') {
             $thismonth = $thismonth->whereRelation('HistoryPemesanan', 'users_provider', $user->users_id);
         } else if ($user->users_role === 'customer') {
             $thismonth = $thismonth->whereRelation('HistoryPemesanan', 'users_customer', $user->users_id);
@@ -319,7 +322,7 @@ class PesananController extends Controller
         return response()->json([
             'status' => "success",
             'message' => "successfully fetched data",
-            'data' => $thismonth->get()
+            'data' => $thismonth->orderBy($sort_column,$sort_type)->get()
         ],200);
     }
 
