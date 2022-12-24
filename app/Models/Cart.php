@@ -43,8 +43,13 @@ class Cart extends Model
         return $this->belongsTo(Menu::class, "menu_id", "menu_id");
     }
 
-    public function Users()
+    public function Customer()
     {
         return $this->belongsTo(Users::class, "users_customer", "users_id");
+    }
+
+    public function Provider()
+    {
+        return $this->belongsTo(Users::class, "users_provider", "users_id");
     }
 }

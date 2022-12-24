@@ -128,8 +128,13 @@ class Users extends Authenticatable
         return $this->hasMany(HistoryPemesanan::class, "users_customer", "users_id");
     }
 
-    public function Cart()
+    public function CartCustomer()
     {
         return $this->hasMany(Cart::class, "users_customer", "users_id");
+    }
+
+    public function CartProvider()
+    {
+        return $this->hasMany(Cart::class, "users_provider", "users_id");
     }
 }

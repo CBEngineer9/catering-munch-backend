@@ -7,6 +7,7 @@ use App\Models\Cart;
 use App\Models\Menu;
 use App\Models\Users;
 use App\Rules\UserRoleRule;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -41,20 +42,33 @@ class CartController extends Controller
         }
 
         if ($request->has("customer_id")) {
-            $cart = Users::findOrFail($request->customer_id)->Cart()->with(['Menu:menu_id,menu_nama'])->get();
+            $cart = Users::findOrFail($request->customer_id)->CartCustomer()->with(['Menu:menu_id,menu_nama'])->get();
         } else {
+            // $cart = Users::find($user->users_id)->CartCustomer()->with(['Menu:menu_id,menu_nama'])->get();
+            // $providers = Users::find($user->users_id)->CartCustomer()->get()
+            //     ->map(function ($item, $key) {
+            //         return $item->Menu->Customer;
+            //     })
+            //     ->unique()
+            //     ->each(function($item, $key) {
+            //         // TODO
+            //     })
+            // ;
+            // $providers = Users::where("users_role","provider")
+            //     ->whereHas("Menu.Cart",function(Builder $query) use ($user) {
+            //         $query->where("users_customer",$user->users_id);
+            //     })
+            //     ->with("Menu.Cart")
+            //     ->get();
+            $cart = Users::where("users_role","provider")
+                ->whereHas("CartProvider",function(Builder $query) use ($user) {
+                    $query->where("users_customer",$user->users_id);
+                })
+                // ->without('Menu')
+                ->with("CartProvider")
+                ->get(["users_id","users_nama"]);
+            // return $cart;
             // $cart = Users::find($user->users_id)->Cart()->with(['Menu:menu_id,menu_nama'])->get();
-            $providers = Users::find($user->users_id)->Cart()->get()
-                ->map(function ($item, $key) {
-                    return $item->Menu->Users;
-                })
-                ->unique()
-                ->each(function($item, $key) {
-                    // TODO
-                })
-            ;
-            return $providers;
-            $cart = Users::find($user->users_id)->Cart()->with(['Menu:menu_id,menu_nama'])->get();
         }
 
         return response()->json([
@@ -103,6 +117,7 @@ class CartController extends Controller
         $menu = Menu::find($request->menu_id);
         Cart::insert([
             "users_customer" => $user->users_id,
+            "users_provider" => Menu::find($request->menu_id)->users_id,
             "menu_id" => $request->menu_id,
             "cart_jumlah" => $request->cart_jumlah,
             "cart_total" => $menu->menu_harga * $request->cart_jumlah,
@@ -123,7 +138,7 @@ class CartController extends Controller
      */
     public function show($id)
     {
-        $cartTerpilih = Cart::findOrFail($id)->with(['Menu',"Users"])->first();
+        $cartTerpilih = Cart::findOrFail($id)->with(['Menu',"Customer"])->first();
         // return request()->user();
         // return $cartTerpilih;
         $this->authorize('view',$cartTerpilih);
