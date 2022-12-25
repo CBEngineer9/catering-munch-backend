@@ -249,17 +249,23 @@ class PesananController extends Controller
         $currUser = new Users((Array)json_decode($request->user()));
         $users_customer = $request->user()->users_id;
 
+        $cartFilter = function ($query) use ($users_customer) {
+            $query
+                ->where("users_customer",$users_customer)
+                ->with("Menu:menu_id,menu_nama");
+        };
+
         $carted_provider = Users::where("users_role","provider")
             ->whereHas("CartProvider",function(Builder $query) use ($users_customer) {
                 $query->where("users_customer",$users_customer);
             })
-            ->withSum('CartProvider as sum_cart_jumlah', "cart_jumlah")
-            ->withSum('CartProvider as sum_cart_total', "cart_total")
-            ->get();    
+            ->withSum(['CartProvider as sum_cart_jumlah' => $cartFilter], "cart_jumlah")
+            ->withSum(['CartProvider as sum_cart_total' => $cartFilter], "cart_total")
+            ->get();
 
         if ($carted_provider == null) {
             return response() ->json([
-                'status' => 'cart is empty',
+                'status' => 'not found',
                 'message' => 'Your cart is empty'
             ],404);
         }

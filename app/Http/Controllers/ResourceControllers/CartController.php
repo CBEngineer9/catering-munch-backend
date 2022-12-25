@@ -45,21 +45,21 @@ class CartController extends Controller
             $cart = Users::findOrFail($request->customer_id)->CartCustomer()->with(['Menu:menu_id,menu_nama'])->get();
         } else {
             // $cart = Users::find($user->users_id)->CartCustomer()->with(['Menu:menu_id,menu_nama'])->get();
+            $cartFilter = function ($query) use ($user) {
+                $query
+                    ->where("users_customer",$user->users_id)
+                    ->with("Menu:menu_id,menu_nama");
+            };
             $cart = Users::where("users_role","provider")
                 ->whereHas("CartProvider",function(Builder $query) use ($user) {
                     $query->where("users_customer",$user->users_id);
                 })
                 ->with([
-                        "CartProvider" => function ($query) use ($user) {
-                            $query
-                                // ->select('cart_id','users_customer','users_provider','menu_id','cart_jumlah as detail_jumlah','cart_total as detail_total')
-                                ->where("users_customer",$user->users_id)
-                                ->with("Menu:menu_id,menu_nama");
-                        }
+                        "CartProvider" => $cartFilter
                     ])
-                ->withSum('CartProvider as sum_cart_jumlah', "cart_jumlah")
-                ->withSum('CartProvider as sum_cart_total', "cart_total")
                 ->select('users_id','users_nama')
+                ->withSum(['CartProvider as sum_cart_jumlah' => $cartFilter], "cart_jumlah")
+                ->withSum(['CartProvider as sum_cart_total' => $cartFilter], "cart_total")
                 ->get();
         }
 
