@@ -121,6 +121,7 @@ Route::prefix('pesanan')->group(function () {
     Route::post('deliver/{detail_id}', [PesananController::class,'kirim']);
     Route::post('receive/{detail_id}', [PesananController::class,'terima']);
     Route::patch('/{id}/rate', [PesananController::class, 'rate']);
+    Route::post('/pesanCart', [PesananController::class, 'pesanCart']);
 });
 Route::resource('pesanan', PesananController::class);
 // avaliable actions
@@ -136,7 +137,6 @@ Route::resource('historyTopup', HistoryTopupController::class);
 
 
 /// REPORT /////////////////////////////////////////////////////////////////////
-// TODO admin
 Route::middleware(['auth:sanctum', 'role:admin,provider'])->prefix('report')->group(function () {
     Route::get('/penjualan', [ReportController::class, 'penjualanTerbanyak']);
 });

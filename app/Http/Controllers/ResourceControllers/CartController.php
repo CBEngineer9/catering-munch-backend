@@ -51,13 +51,16 @@ class CartController extends Controller
                 })
                 ->with([
                         "CartProvider" => function ($query) use ($user) {
-                            $query->where("users_customer",$user->users_id)
+                            $query
+                                // ->select('cart_id','users_customer','users_provider','menu_id','cart_jumlah as detail_jumlah','cart_total as detail_total')
+                                ->where("users_customer",$user->users_id)
                                 ->with("Menu:menu_id,menu_nama");
                         }
                     ])
                 ->withSum('CartProvider as sum_cart_jumlah', "cart_jumlah")
                 ->withSum('CartProvider as sum_cart_total', "cart_total")
-                ->get(["users_id","users_nama"]);
+                ->select('users_id','users_nama')
+                ->get();
                 // TODO beautyfy result
         }
 

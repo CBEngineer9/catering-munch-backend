@@ -4,6 +4,7 @@ namespace App\Http\Controllers\ResourceControllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PemesananResource;
+use App\Models\Cart;
 use App\Models\DetailPemesanan;
 use App\Models\HistoryPemesanan;
 use App\Models\Menu;
@@ -166,18 +167,18 @@ class PesananController extends Controller
             $users_customer = $request->user()->users_id;
         } 
         
-        // TODO money check
+        // money check
         $details = $request->details;
         $total_price = 0;
         foreach ($details as $detail) {
             $total_price += Menu::find($detail['menu_id'])->menu_harga;
         }
-        // if ($request->user()->users_saldo < $total_price) {
-        //     return response() ->json([
-        //         'status' => 'payment required',
-        //         'message' => 'Your credit is not enough to buy these item'
-        //     ],402);
-        // }
+        if ($request->user()->users_saldo < $total_price) {
+            return response() ->json([
+                'status' => 'payment required',
+                'message' => 'Your credit is not enough to buy these item'
+            ],402);
+        }
 
         // all good
         DB::beginTransaction();
@@ -210,6 +211,8 @@ class PesananController extends Controller
                 $detail_model->detail_status = $status;
                 $detail_model->save();
             }
+            // transfer money
+
 
             DB::commit();
         } catch (\Throwable $th) {
@@ -230,7 +233,109 @@ class PesananController extends Controller
             'status' => 'created',
             'message' => 'successfully created pemesanan'
         ]);
+    }
+
+    /**
+     * Move customer cart into real pesanan
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     **/
+    public function pesanCart(Request $request)
+    {
+        // authorize
+        $this->authorize('create', HistoryPemesanan::class);
+
+        $currUser = new Users((Array)json_decode($request->user()));
+        $users_customer = $request->user()->users_id;
+
+        $carted_provider = Users::where("users_role","provider")
+            ->whereHas("CartProvider",function(Builder $query) use ($users_customer) {
+                $query->where("users_customer",$users_customer);
+            })
+            ->withSum('CartProvider as sum_cart_jumlah', "cart_jumlah")
+            ->withSum('CartProvider as sum_cart_total', "cart_total")
+            ->get();    
+
+        if ($carted_provider == null) {
+            return response() ->json([
+                'status' => 'cart is empty',
+                'message' => 'Your cart is empty'
+            ],404);
+        }
         
+        // money check
+        $total_price = 0;
+        foreach ($carted_provider as $cart) {
+            
+            $total_price += $cart->sum_cart_total;
+            if ($request->user()->users_saldo < $total_price) {
+                return response() ->json([
+                    'status' => 'payment required',
+                    'message' => 'Your credit is not enough to buy these item'
+                ],402);
+            }
+        }
+
+        // all good
+
+        $historyPemesanan = new HistoryPemesanan();
+
+        DB::beginTransaction();
+        try {
+            foreach ($carted_provider as $provider) {
+                $carts = $provider->CartProvider
+                    ->where("users_customer",$users_customer);
+
+                $total = 0;
+                $historyPemesanan->users_provider = $provider->users_id;
+                $historyPemesanan->users_customer = $users_customer;
+                $historyPemesanan->pemesanan_status = 'menunggu';
+                $historyPemesanan->pemesanan_jumlah = count($carts);
+                $historyPemesanan->pemesanan_total = $total_price;
+                $historyPemesanan->pemesanan_rating = 0;
+                $historyPemesanan->save();
+                
+                foreach ($carts as $cart) {
+                    $menu = Menu::find($cart['menu_id']);
+                    $total += $menu->menu_harga;
+                    
+                    $detail_model = new DetailPemesanan();
+                    $detail_model->pemesanan_id = $historyPemesanan->pemesanan_id;
+                    $detail_model->menu_id = $cart['menu_id'];
+                    $detail_model->detail_jumlah = $cart['cart_jumlah'];
+                    $detail_model->detail_total = $cart['cart_jumlah'] * $menu->menu_harga;
+                    $detail_model->detail_tanggal = $cart['cart_tanggal'];
+                    $detail_model->detail_status = 'belum dikirim';
+                    $detail_model->save();
+                }
+                
+                $provider = Users::find($provider->users_id);
+                $provider->notify(new OrderMadeNotif($historyPemesanan));
+            }
+
+            // clear cart
+            $userCarts = Cart::where("users_customer",$users_customer)->get("cart_id")->map(function ($cartItem, $key) {
+                return $cartItem->cart_id;
+            });
+            Cart::destroy($userCarts->all());
+            
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollback();
+            return response()->json([
+                'status' => "server error",
+                'message' => "mysql error",
+                "errors" => [
+                    'mysql_error' => $th->getMessage()
+                ]
+            ],500);
+        }
+        
+        return response()->json([
+            'status' => 'created',
+            'message' => 'successfully created pemesanan'
+        ]);
     }
 
     /**
