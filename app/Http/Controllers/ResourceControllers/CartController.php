@@ -61,7 +61,6 @@ class CartController extends Controller
                 ->withSum('CartProvider as sum_cart_total', "cart_total")
                 ->select('users_id','users_nama')
                 ->get();
-                // TODO beautyfy result
         }
 
         return response()->json([

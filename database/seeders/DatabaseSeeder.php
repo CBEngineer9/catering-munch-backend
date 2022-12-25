@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use App\Models\Cart;
 use App\Models\DetailPemesanan;
 use App\Models\HistoryMenu;
 use App\Models\HistoryPemesanan;
@@ -73,6 +74,18 @@ class DatabaseSeeder extends Seeder
                 ->for($provider, 'UsersProvider')
                 ->has(DetailPemesanan::factory()->forProvider($provider)->count(5))
                 ->create();
+        }
+            
+        foreach ($customers as $customer) {
+            $cart_provider_count = 2;
+            for ($i=0; $i < $cart_provider_count; $i++) { 
+                $provider = $providers[rand(0,count($providers)-1)];
+                Cart::factory()->count(3)
+                    ->for($customer, 'Customer')
+                    ->for($provider, 'Provider')
+                    ->forProvider($provider)
+                    ->create();
+            }
         }
         // TODO History Log
 

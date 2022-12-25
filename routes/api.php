@@ -56,7 +56,7 @@ Route::middleware('auth:sanctum')->patch('/topup', [UsersController::class, 'top
 
 
 // USERS ///////////////////////////////////////////////////////////
-Route::prefix('users')->group(function () {
+Route::middleware(['auth:sanctum'])->prefix('users')->group(function () {
     ////////////////////////////////////////////////////////////
     // DEPRECATED ZONE
     Route::get('getAllCustomers', [UsersController::class, 'getAllCustomers']);
@@ -69,7 +69,7 @@ Route::prefix('users')->group(function () {
     Route::delete('purge/{id}', [UsersController::class, 'purge']);
     Route::post('restore/{id}', [UsersController::class, 'restore']);
 });
-Route::resource('users', UsersController::class)
+Route::middleware(['auth:sanctum'])->resource('users', UsersController::class)
     ->missing(function (Request $request) {
         return response()->json([
             'status' => 'not found',
@@ -97,7 +97,7 @@ Route::resource('menu', MenuController::class);
 
 
 // HISTORY MENU ////////////////////////////////////////////////////////////////
-Route::resource('historyMenu', HistoryMenuController::class);
+Route::middleware(['auth:sanctum'])->resource('historyMenu', HistoryMenuController::class);
 // avaliable actions
 // index
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +130,7 @@ Route::resource('pesanan', PesananController::class);
 
 
 /// HISTORY TOPUP //////////////////////////////////////////////////////////////
-Route::resource('historyTopup', HistoryTopupController::class);
+Route::middleware(['auth:sanctum'])->resource('historyTopup', HistoryTopupController::class);
 // avaliable actions
 // index
 ////////////////////////////////////////////////////////////////////////////////

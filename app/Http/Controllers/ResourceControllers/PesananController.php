@@ -678,7 +678,6 @@ class PesananController extends Controller
      **/
     public function rate(Request $request, $id)
     {
-        // TODO where to display
         $pemesananTerpilih = HistoryPemesanan::findOrFail($id);
         $this->authorize('rate',$pemesananTerpilih);
 
