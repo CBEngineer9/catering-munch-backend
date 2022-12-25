@@ -48,16 +48,22 @@ class PenjualanTerbanyakReport implements FromCollection, WithHeadings
     public function collection()
     {
         return DetailPemesanan::whereHas('HistoryPemesanan',function(Builder $query) {
-                $query->where('pemesanan_status','selesai')
-                    // ->where('users_provider',$this->provider_id);
-                    ;
-            })
-            ->with("Menu:menu_id,menu_nama")
-            // ->addSelect(DB::raw('sum(detail_jumlah) as total_terjual, sum(detail_total) as total_penjualan'))
-            // ->groupBy(['menu_id'])
-            // ->orderBy('total_penjualan')
-            ->get()
-            ->flatten(1)
-            ;
+            $query->where('pemesanan_status','selesai')
+                ->where('users_provider',$this->provider_id);
+                ;
+        })
+        ->with("Menu:menu_id,menu_nama")
+        ->addSelect(DB::raw('menu_id,sum(detail_jumlah) as total_terjual, sum(detail_total) as total_penjualan'))
+        ->groupBy(['menu_id'])
+        ->orderBy('total_penjualan')
+        ->get()
+        ->map(function($item){
+            return [
+                "menu_nama" => $item->menu->menu_nama,
+                "total_terjual" => $item->total_terjual,
+                "total_penjualn" => $item->total_penjualan,
+            ];
+        })
+        ;
     }
 }
