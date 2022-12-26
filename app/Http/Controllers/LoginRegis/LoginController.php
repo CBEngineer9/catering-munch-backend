@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\LoginRegis;
 
 use App\Http\Controllers\Controller;
+use App\Models\Users;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -22,6 +23,14 @@ class LoginController extends Controller
                 'message' => 'Wrong email / password',
                 'errors' => $validator->errors(),
             ],422);
+        }
+
+        $user = Users::where("users_email",$request->users_email)->first();
+        if ($user->users_status === 'banned') {
+            return response() ->json([
+                'status' => 'bad request',
+                'message' => 'you are banned',
+            ],400);
         }
 
         $credential = $validator->validated();
