@@ -102,7 +102,7 @@ class UsersController extends Controller
         if ($isAppend) {
             $listUser = $listUser->get()->sortBy(function($users) use ($sort_column){
                 return $users->$sort_column;
-            }, SORT_REGULAR, $sort_type === "desc");
+            }, SORT_REGULAR, $sort_type === "desc")->values();
 
             $batch = LengthAwarePaginator::resolveCurrentPage('page');
             $paginated = new LengthAwarePaginator(
