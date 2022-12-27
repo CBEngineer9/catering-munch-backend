@@ -51,6 +51,9 @@ Route::post('/register', [RegisterController::class, 'register'])->name('registe
 Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'logout']);
 Route::middleware('auth:sanctum')->patch('/topup', [UsersController::class, 'topup']);
 
+Route::post('/login-api', [LoginController::class, 'loginApi'])->name('loginApi');
+Route::middleware('auth:sanctum')->post('/logout-api', [LoginController::class, 'logoutApi']);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
