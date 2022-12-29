@@ -77,6 +77,21 @@ class LoginController extends Controller
                 'message' => 'you are banned',
             ],400);
         }
+        
+        // already has token
+        if ($user->currentAccessToken() !== null) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'already logged in',
+                'data' => [
+                    'users_id' => $user->users_id,
+                    'users_email' => $user->users_email,
+                    'users_role' => $user->users_role,
+                    'access_token' => $user->currentAccessToken(),
+                    'token_type' => 'Bearer'
+                ],
+            ],200);
+        }
 
         $credential = $validator->validated();
 
@@ -89,7 +104,7 @@ class LoginController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'successfuly logged in',
-                'user' => [
+                'data' => [
                     'users_id' => $user->users_id,
                     'users_email' => $user->users_email,
                     'users_role' => $user->users_role,

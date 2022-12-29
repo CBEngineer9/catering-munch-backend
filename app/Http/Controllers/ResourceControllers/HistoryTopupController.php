@@ -42,7 +42,7 @@ class HistoryTopupController extends Controller
 
         $sort_column = $request->sort['column'] ?? "topup_tanggal";
         $sort_type = $request->sort['type'] ?? "desc";
-        $batch_size = $request->batch_size ?? 10;
+        // $batch_size = $request->batch_size ?? 10;
         $date_lower = $request->date_lower ?? "1970-01-01";
         $date_upper = $request->date_upper ?? date("Y-m-d");
 
@@ -62,7 +62,11 @@ class HistoryTopupController extends Controller
         if ($date_upper) {
             $histTopup = $histTopup->whereDate('topup_tanggal',"<=",$date_upper);
         }
-        $histTopup = $histTopup->paginate($batch_size);
+        if ($request->has('batch_size') && $request->batch_size !== null) {
+            $histTopup = $histTopup->paginate($request->batch_size);
+        } else {
+            $histTopup = $histTopup->get();
+        }
         return response()->json([
             'status' => "success",
             'message' => "successfully fetched history topup",

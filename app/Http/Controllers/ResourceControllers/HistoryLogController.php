@@ -33,7 +33,7 @@ class HistoryLogController extends Controller
 
         $sort_column = $request->sort['column'] ?? "log_timestamp";
         $sort_type = $request->sort['type'] ?? "desc";
-        $batch_size = $request->batch_size ?? 10;
+        // $batch_size = $request->batch_size ?? 10;
         $date_lower = $request->date_lower ?? "1970-01-01";
         $date_upper = $request->date_upper ?? date("Y-m-d");
 
@@ -44,7 +44,11 @@ class HistoryLogController extends Controller
         if ($date_upper) {
             $histLog = $histLog->whereDate('log_timestamp',"<=",$date_upper);
         }
-        $histLog = $histLog->paginate($batch_size);
+        if ($request->has('batch_size') && $request->batch_size !== null) {
+            $histLog = $histLog->paginate($request->batch_size);
+        } else {
+            $histLog = $histLog->get();
+        }
         return response()->json([
             'status' => "success",
             'message' => "successfully fetched history log",

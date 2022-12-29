@@ -41,7 +41,7 @@ class MenuController extends Controller
 
         $sort_column = $request->sort['column'] ?? "menu_id";
         $sort_type = $request->sort['type'] ?? "asc";
-        $batch_size = $request->batch_size ?? 10;
+        // $batch_size = $request->batch_size ?? 10;
 
         $listMenu = Menu::orderBy($sort_column,$sort_type);
         if ($request->has('provider_id') && $request->provider_id != null) {
@@ -53,7 +53,15 @@ class MenuController extends Controller
         if ($request->has('menu_status') && $request->menu_status != null) {
             $listMenu = $listMenu->where('menu_status',$request->menu_status);
         }
-        $listMenu = $listMenu->with('Users:users_id,users_nama')->paginate($batch_size);
+
+        $listMenu = $listMenu->with('Users:users_id,users_nama');
+
+        if ($request->has('batch_size') && $request->batch_size !== null) {
+            $listMenu = $listMenu->paginate($request->batch_size);
+        } else {
+            $listMenu = $listMenu->get();
+        }
+        
         return response()->json([
             'status' => "success",
             'message' => "successfully fetched menu",
