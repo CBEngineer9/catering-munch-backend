@@ -78,20 +78,7 @@ class LoginController extends Controller
             ],400);
         }
         
-        // already has token
-        if ($user->currentAccessToken() !== null) {
-            return response()->json([
-                'status' => 'success',
-                'message' => 'already logged in',
-                'data' => [
-                    'users_id' => $user->users_id,
-                    'users_email' => $user->users_email,
-                    'users_role' => $user->users_role,
-                    'access_token' => $user->currentAccessToken(),
-                    'token_type' => 'Bearer'
-                ],
-            ],200);
-        }
+        
 
         $credential = $validator->validated();
 
@@ -99,19 +86,33 @@ class LoginController extends Controller
             session()->regenerate();
             $user = Users::where('users_email', $request->users_email)->firstOrFail();
 
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'successfuly logged in',
-                'data' => [
-                    'users_id' => $user->users_id,
-                    'users_email' => $user->users_email,
-                    'users_role' => $user->users_role,
-                    'access_token' => $token,
-                    'token_type' => 'Bearer'
-                ],
-            ],200);
+            // already has token
+            if ($user->currentAccessToken() !== null) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'already logged in',
+                    'data' => [
+                        'users_id' => $user->users_id,
+                        'users_email' => $user->users_email,
+                        'users_role' => $user->users_role,
+                        'access_token' => $user->currentAccessToken(),
+                        'token_type' => 'Bearer'
+                    ],
+                ],200);
+            } else {
+                $token = $user->createToken('auth_token')->plainTextToken;
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'successfuly logged in',
+                    'data' => [
+                        'users_id' => $user->users_id,
+                        'users_email' => $user->users_email,
+                        'users_role' => $user->users_role,
+                        'access_token' => $token,
+                        'token_type' => 'Bearer'
+                    ],
+                ],200);
+            }
         } else {
             return response()->json([
                 'status' => 'unprocessable request',
