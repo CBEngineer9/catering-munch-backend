@@ -86,7 +86,7 @@ class UsersPolicy
     {
         return $users->isAdministrator()
         ? Response::allow()
-        : Response::deny('You cannot force delete this resource.');
+        : Response::deny('You cannot ban this user.');
     }
 
     /**
@@ -100,7 +100,7 @@ class UsersPolicy
     {
         return $users->isAdministrator()
         ? Response::allow()
-        : Response::deny('You cannot force delete this resource.');
+        : Response::deny('You cannot unban this user.');
     }
 
     /**
@@ -128,7 +128,7 @@ class UsersPolicy
     {
         return $users->isAdministrator()
         ? Response::allow()
-        : Response::deny('You cannot force delete this resource.');
+        : Response::deny('You cannot delete this resource.');
     }
 
     /**
@@ -142,7 +142,7 @@ class UsersPolicy
     {
         return $users->isAdministrator()
         ? Response::allow()
-        : Response::deny('You cannot force delete this resource.');
+        : Response::deny('You cannot restore this resource.');
     }
 
     /**
