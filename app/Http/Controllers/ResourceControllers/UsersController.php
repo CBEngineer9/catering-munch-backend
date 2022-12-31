@@ -57,7 +57,7 @@ class UsersController extends Controller
 
         $sort_column = $request->sort['column'] ?? "users_id";
         $sort_type = $request->sort['type'] ?? "asc";
-        $batch_size = $request->batch_size ?? 10;
+        // $batch_size = $request->batch_size ?? 10;
 
         $isAppend = false;
         foreach ($appended as $app) {
@@ -104,18 +104,25 @@ class UsersController extends Controller
                 return $users->$sort_column;
             }, SORT_REGULAR, $sort_type === "desc")->values();
 
-            $batch = LengthAwarePaginator::resolveCurrentPage('page');
-            $paginated = new LengthAwarePaginator(
-                $listUser->forPage($batch, $batch_size), 
-                $listUser->count(), 
-                $batch_size, 
-                $batch,[
-                    'path' => LengthAwarePaginator::resolveCurrentPath(),
-                    'pageName' => 'page'
-                ]
-            );
+            if ($request->has('batch_size') && $request->batch_size !== null) {
+                $batch = LengthAwarePaginator::resolveCurrentPage('page');
+                $paginated = new LengthAwarePaginator(
+                    $listUser->forPage($batch, $request->batch_size), 
+                    $listUser->count(), 
+                    $request->batch_size, 
+                    $batch,[
+                        'path' => LengthAwarePaginator::resolveCurrentPath(),
+                        'pageName' => 'page'
+                    ]
+                );
+            }
+
         } else {
-            $paginated = $listUser->paginate($batch_size);
+            if ($request->has('batch_size') && $request->batch_size !== null) {
+                $paginated = $listUser->paginate($request->batch_size);
+            } else {
+                $paginated = $listUser->get();
+            }
         }
 
         return response()->json([

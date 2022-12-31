@@ -56,7 +56,7 @@ class PesananController extends Controller
 
         $sort_column = $request->sort['column'] ?? "pemesanan_id";
         $sort_type = $request->sort['type'] ?? "asc";
-        $batch_size = $request->batch_size ?? 10;
+        // $batch_size = $request->batch_size ?? 10;
         $date_lower = $request->date_lower ?? "1970-01-01";
         $date_upper = $request->date_upper ?? date("Y-m-d");
 
@@ -72,15 +72,26 @@ class PesananController extends Controller
         }
 
         if ($currUser->users_role == 'admin') {
-            $pemesanan = $pemesanan->paginate($batch_size);
+            if ($request->has('batch_size') && $request->batch_size !== null) {
+                $pemesanan = $pemesanan->paginate($request->batch_size);
+            } else {
+                $pemesanan = $pemesanan->get();
+            }
+
             return response()->json([
                 'status' => "success",
                 'message' => "successfully fetched all data",
                 'data' => $pemesanan
             ],200);
         } else if ($currUser->users_role == "provider") {
-            $pemesanan = $pemesanan->where("users_provider",$currUser->users_id)
-                ->paginate($batch_size);
+            $pemesanan = $pemesanan->where("users_provider",$currUser->users_id);
+
+            if ($request->has('batch_size') && $request->batch_size !== null) {
+                $pemesanan = $pemesanan->paginate($request->batch_size);
+            } else {
+                $pemesanan = $pemesanan->get();
+            }
+
             return response()->json([
                 "status" => "success",
                 "message" => "successfuly fetched pemesanan provider",
@@ -89,8 +100,14 @@ class PesananController extends Controller
             // return response()->dro('success',200,'successfuly fetched pemesanan',$pemesanan);
             // return response()->caps('success');
         } else if ($currUser->users_role == "customer") {
-            $pemesanan = $pemesanan->where("users_customer",$currUser->users_id)
-                ->paginate($batch_size);
+            $pemesanan = $pemesanan->where("users_customer",$currUser->users_id);
+
+            if ($request->has('batch_size') && $request->batch_size !== null) {
+                $pemesanan = $pemesanan->paginate($request->batch_size);
+            } else {
+                $pemesanan = $pemesanan->get();
+            }
+
             return response()->json([
                 "status" => "success",
                 "message" => "successfuly fetched pemesanan customer",

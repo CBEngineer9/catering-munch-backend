@@ -77,6 +77,8 @@ class LoginController extends Controller
                 'message' => 'you are banned',
             ],400);
         }
+        
+        
 
         $credential = $validator->validated();
 
@@ -84,8 +86,15 @@ class LoginController extends Controller
             session()->regenerate();
             $user = Users::where('users_email', $request->users_email)->firstOrFail();
 
-            $token = $user->createToken('auth_token')->plainTextToken;
+            $tokens = $user->tokens;
+            // already has token
+            if (count($tokens) !== 0) {
+                // delete token
+                $user->tokens()->delete();
+            }
 
+            // create new token
+            $token = $user->createToken('auth_token')->plainTextToken;
             return response()->json([
                 'status' => 'success',
                 'message' => 'successfuly logged in',
