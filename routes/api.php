@@ -93,7 +93,7 @@ Route::middleware(['auth:sanctum','role:admin','log'])->resource('log', HistoryL
 
 
 // MENU ////////////////////////////////////////////////////////////////////////
-Route::resource('menu', MenuController::class);
+Route::middleware(['auth:sanctum','log'])->resource('menu', MenuController::class);
 // avaliable actions
 // index, store, show, update, destroy
 ////////////////////////////////////////////////////////////////////////////////
