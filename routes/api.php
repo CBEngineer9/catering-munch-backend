@@ -117,7 +117,7 @@ Route::middleware(['auth:sanctum','log'])->resource('cart', CartController::clas
 
 
 // PESANAN /////////////////////////////////////////////////////////////////////
-Route::prefix('pesanan')->group(function () {
+Route::middleware(['auth:sanctum','log'])->prefix('pesanan')->group(function () {
     Route::get('showDelivery', [PesananController::class,'showDelivery']);
     Route::post('{id}/reject', [PesananController::class,'reject']);
     Route::post('{id}/accept', [PesananController::class,'accept']);
@@ -126,7 +126,7 @@ Route::prefix('pesanan')->group(function () {
     Route::patch('/{id}/rate', [PesananController::class, 'rate']);
     Route::post('/pesanCart', [PesananController::class, 'pesanCart']);
 });
-Route::resource('pesanan', PesananController::class);
+Route::middleware(['auth:sanctum','log'])->resource('pesanan', PesananController::class);
 // avaliable actions
 // index, store, show, update, destroy
 ////////////////////////////////////////////////////////////////////////////////

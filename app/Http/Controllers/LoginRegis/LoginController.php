@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\LoginRegis;
 
+use App\Helpers\LogHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Users;
 use Illuminate\Http\Request;
@@ -18,6 +19,8 @@ class LoginController extends Controller
         ]);
 
         if ($validator->fails()) {
+            LogHelper::log("alert","failed login attempt","from " . $request->ip(). ", reason: bad request",1);
+
             return response() ->json([
                 'status' => 'unprocessable content',
                 'message' => 'Wrong email / password',
@@ -27,6 +30,8 @@ class LoginController extends Controller
 
         $user = Users::where("users_email",$request->users_email)->first();
         if ($user->users_status === 'banned') {
+            LogHelper::log("alert","failed login attempt","from " . $request->ip(). ", reason: banned",1);
+
             return response() ->json([
                 'status' => 'bad request',
                 'message' => 'you are banned',
@@ -38,6 +43,8 @@ class LoginController extends Controller
         if (Auth::guard('web')->attempt($credential)) {
             session()->regenerate();
             $user = Auth::guard('web')->user();
+
+            LogHelper::log("alert","successful login","from " . $request->ip(),$user->users_id);
             return response()->json([
                 'status' => 'success',
                 'message' => 'successfuly logged in',
@@ -48,6 +55,7 @@ class LoginController extends Controller
                 ],
             ],200);
         } else {
+            LogHelper::log("alert","failed login attempt","from " . $request->ip(). ", reason: wrong credentials",1);
             return response()->json([
                 'status' => 'unprocessable request',
                 'message' => 'Wrong email / password'
@@ -63,6 +71,7 @@ class LoginController extends Controller
         ]);
 
         if ($validator->fails()) {
+            LogHelper::log("alert","failed login attempt","from " . $request->ip(). ", reason: bad request",1);
             return response() ->json([
                 'status' => 'unprocessable content',
                 'message' => 'Wrong email / password',
@@ -72,6 +81,7 @@ class LoginController extends Controller
 
         $user = Users::where("users_email",$request->users_email)->first();
         if ($user->users_status === 'banned') {
+            LogHelper::log("alert","failed login attempt","from " . $request->ip(). ", reason: banned",1);
             return response() ->json([
                 'status' => 'bad request',
                 'message' => 'you are banned',
@@ -95,6 +105,7 @@ class LoginController extends Controller
 
             // create new token
             $token = $user->createToken('auth_token')->plainTextToken;
+            LogHelper::log("alert","successful login","from " . $request->ip(),$user->users_id);
             return response()->json([
                 'status' => 'success',
                 'message' => 'successfuly logged in',
@@ -107,6 +118,7 @@ class LoginController extends Controller
                 ],
             ],200);
         } else {
+            LogHelper::log("alert","failed login attempt","from " . $request->ip(). ", reason: wrong credentials",1);
             return response()->json([
                 'status' => 'unprocessable request',
                 'message' => 'Wrong email / password'
@@ -116,20 +128,28 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
+        $user = $request->user();
+
         Auth::guard('web')->logout();
         session()->invalidate();
         session()->regenerateToken();
+
+        LogHelper::log("alert","successful logout","from " . $request->ip(),$user->users_id);
+        
         return response()->json([
             'status' => 'success',
             'message' => 'successfuly logged out',
         ],200);
     }
 
-    public function logoutApi()
+    public function logoutApi(Request $request)
     {
         $authUser = Auth::user();
         $user = Users::where('users_email', $authUser->users_email)->firstOrFail();
         $user->tokens()->delete();
+
+        LogHelper::log("info","successful logout","from " . $request->ip(),$user->users_id);
+        
         return response()->json([
             'status' => 'success',
             'message' => 'successfuly logged out',

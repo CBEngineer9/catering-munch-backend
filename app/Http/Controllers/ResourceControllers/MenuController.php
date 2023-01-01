@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\ResourceControllers;
 
+use App\Helpers\LogHelper;
 use App\Http\Controllers\Controller;
 use App\Models\HistoryMenu;
 use App\Models\Menu;
@@ -26,10 +27,12 @@ class MenuController extends Controller
         // authorization
         $this->authorize('viewAny', Menu::class);
 
+        $user = $request->user();
+
         $new_menu = new Menu();
         $tablename = $new_menu->getTable();
         $columns = Schema::getColumnListing($tablename);
-        $request->validate([
+        $validator = Validator::make($request->all(),[
             "provider_id" => ["nullable", "exists:App\Models\Users,users_id", new UserRoleRule("provider")],
             'sort' => 'nullable',
             'sort.column' => ['nullable' , Rule::in($columns)],
@@ -38,6 +41,20 @@ class MenuController extends Controller
             'menu_nama' =>  ['nullable', "string"],
             "menu_status" => ['nullable', Rule::in(['tersedia','tidak tersedia'])]
         ]);
+        if ($validator->fails()) {
+            if ($user == null) {
+                $users_id = 1;
+            } else {
+                $users_id = $user->users_id;
+            }
+            LogHelper::log("alert","failed menu fetch attempt","from " . $request->ip(). ", reason: validation fail",$users_id);
+            
+            return response() ->json([
+                'status' => 'unprocessable content',
+                'message' => 'There are errors found on the data you have entered',
+                'errors' => $validator->errors(),
+            ],422);
+        }
 
         $sort_column = $request->sort['column'] ?? "menu_id";
         $sort_type = $request->sort['type'] ?? "asc";
@@ -61,6 +78,13 @@ class MenuController extends Controller
         } else {
             $listMenu = $listMenu->get();
         }
+
+        if ($user == null) {
+            $users_id = 1;
+        } else {
+            $users_id = $user->users_id;
+        }
+        LogHelper::log("info","successful menu fetch","from " . $request->ip(),$users_id);
         
         return response()->json([
             'status' => "success",
@@ -91,6 +115,11 @@ class MenuController extends Controller
         $this->authorize('create', Menu::class);
 
         $currUser = new Users((Array)json_decode($request->user()));
+        if ($currUser == null) {
+            $users_id = 1;
+        } else {
+            $users_id = $currUser->users_id;
+        }
         $validator = Validator::make($request->all(),[
             'menu_nama' => "required|string",
             'menu_foto' => "required|file|image|max:4194",
@@ -103,6 +132,7 @@ class MenuController extends Controller
             ],
         ]);
         if ($validator->fails()) {
+            LogHelper::log("alert","failed menu create attempt","from " . $request->ip(). ", reason: validation fail",$users_id);
             return response() ->json([
                 'status' => 'unprocessable content',
                 'message' => 'There are errors found on the data you have entered',
@@ -136,6 +166,7 @@ class MenuController extends Controller
             DB::commit();
         } catch (\Throwable $th) {
             DB::rollback();
+            LogHelper::log("error","failed menu create attempt","from " . $request->ip(). ", reason: server error",$users_id);
             return response()->json([
                 'status' => "server error",
                 'message' => "mysql error",
@@ -144,6 +175,8 @@ class MenuController extends Controller
                 ]
             ],500);
         }
+
+        LogHelper::log("info","successful menu create","from " . $request->ip(),$users_id);
 
         return response()->json([
             'status' => 'success',
@@ -162,8 +195,17 @@ class MenuController extends Controller
         // authorize
         $menu = Menu::find($id);
         $this->authorize('view',$menu);
+        $user = request()->user();
 
         $menuTerpilih = Menu::findOrFail($id)->toArray();
+
+        if ($user == null) {
+            $users_id = 1;
+        } else {
+            $users_id = $user->users_id;
+        }
+        LogHelper::log("info","successful menu show","from " . request()->ip(),$users_id);
+
         return response()->json([
             "status" => "success",
             "message" => "successfully fetched menu",
@@ -194,6 +236,13 @@ class MenuController extends Controller
         // authorize
         $menu = Menu::find($id);
         $this->authorize('update',$menu);
+
+        $user = $request->user();
+        if ($user == null) {
+            $users_id = 1;
+        } else {
+            $users_id = $user->users_id;
+        }
         
         $validator = Validator::make($request->all(),[
             'menu_nama' => "nullable|string",
@@ -203,6 +252,8 @@ class MenuController extends Controller
             'menu_status' => ["nullable", Rule::in(['tersedia','tidak tersedia'])]
         ]);
         if ($validator->fails()) {
+            LogHelper::log("alert","failed menu update attempt","from " . $request->ip(). ", reason: validation fail",$users_id);
+
             return response() ->json([
                 'status' => 'unprocessable content',
                 'message' => 'There are errors found on the data you have entered',
@@ -252,6 +303,7 @@ class MenuController extends Controller
             DB::commit();
         } catch (\Throwable $th) {
             DB::rollback();
+            LogHelper::log("error","failed menu update attempt","from " . $request->ip(). ", reason: server error",$users_id);
             return response()->json([
                 'status' => "server error",
                 'message' => "mysql error",
@@ -260,6 +312,8 @@ class MenuController extends Controller
                 ]
             ],500);
         }
+
+        LogHelper::log("info","successful menu update attempt","from " . $request->ip(),$users_id);
 
         return response()->json([
             'status' => 'success',
@@ -278,7 +332,14 @@ class MenuController extends Controller
         // authorize
         $menu = Menu::find($id);
         $this->authorize('delete',$menu);
-        
+
+        $user = request()->user();
+        if ($user == null) {
+            $users_id = 1;
+        } else {
+            $users_id = $user->users_id;
+        }
+
         $hist = new HistoryMenu();
         $hist->history_menu_action = "Deleted Menu";
         $hist->menu_id = $id;
@@ -290,6 +351,7 @@ class MenuController extends Controller
             DB::commit();
         } catch (\Throwable $th) {
             DB::rollback();
+            LogHelper::log("alert","failed menu delete attempt","from " . request()->ip(). ", reason: validation fail",$users_id);
             return response()->json([
                 'status' => "server error",
                 'message' => "mysql error",
@@ -298,6 +360,8 @@ class MenuController extends Controller
                 ]
             ],500);
         }
+
+        LogHelper::log("info","successful menu delete attempt","from " . request()->ip(),$users_id);
         
         return response()->json([
             'status' => 'success',

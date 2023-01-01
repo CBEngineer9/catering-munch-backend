@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\LoginRegis;
 
+use App\Helpers\LogHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Users;
 use Illuminate\Http\Request;
@@ -25,6 +26,8 @@ class RegisterController extends Controller
         ]);
 
         if ($validator->fails()) {
+            LogHelper::log("alert","failed register attempt","from " . $request->ip(). ", reason: validation fail",1);
+            
             return response() ->json([
                 'status' => 'unprocessable content',
                 'message' => 'The request is in the correct form, but the content is invalid. Check your api manual',
@@ -44,49 +47,11 @@ class RegisterController extends Controller
             "users_status" => $request->users_role == "customer" ? "aktif" : "menunggu"
         ]);
 
+        LogHelper::log("info","successful register","from " . $request->ip(),0);
+
         return response()->json([
             "status" => "created",
             "message" => "successfully registered new account"
         ],201);
-
-        // $name = $request->name;
-        // $email = $request->email;
-        // $password = $request->password;
-        // $alamat = $request->alamat;
-        // $telepon = $request->telepon;
-        // $role = $request->role;
-
-        // $request->validate([
-        //     "name" => "required",
-        //     "email" => "required | email | unique:users,users_email",
-        //     "password" => "required | confirmed",
-        //     "alamat" => "required",
-        //     "telepon" => "required | numeric | digits_between:8,12 | unique:users,users_telepon",
-        //     "tna" => "accepted",
-        // ]);
-
-        // if ($role == "customer") {
-        //     $status = "aktif";
-        // } else {
-        //     $status = "menunggu";
-        // }
-
-        // $result = Users::create([
-        //     "users_email" => $email,
-        //     "users_telepon" => $telepon,
-        //     "users_nama" => $name,
-        //     "users_alamat" => $alamat,
-        //     "users_password" => Hash::make($password),
-        //     "users_role" => $role,
-        //     "users_status" => $status,
-        // ]);
-
-
-
-        // if ($result) {
-        //     return redirect()->route('view-login')->with("message", "Berhasil Register!");
-        // }
-
-        // return back()->with("message", "Gagal Register!");
     }
 }

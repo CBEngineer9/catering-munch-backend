@@ -31,6 +31,17 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         // Generate admin if not exist
+        if (Users::where("users_email","nouser@system.com")->count() == 0) {
+            Users::insert([
+                "users_nama" => "no user",
+                "users_email" => "nouser@system.com",
+                "users_password" => Hash::make("123"),
+                "users_alamat" => fake()->address(),
+                "users_telepon" => fake()->phoneNumber(),
+                "users_role" => "admin",
+                "users_status" => "aktif",
+            ]);
+        }
         if (Users::where("users_email","admin@admin.com")->count() == 0) {
             Users::create([
                 "users_nama" => "admin",
