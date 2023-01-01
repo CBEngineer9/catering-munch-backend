@@ -31,7 +31,7 @@ class MenuPolicy
      * @param  \App\Models\Users  $users
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function viewAny(Users $users)
+    public function viewAny(Users $users = null)
     {
         return Response::allow();
     }
@@ -43,7 +43,7 @@ class MenuPolicy
      * @param  \App\Models\Menu  $menu
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function view(Users $users, Menu $menu)
+    public function view(?Users $users = null, Menu $menu)
     {
         return Response::allow();
     }

@@ -38,28 +38,28 @@ use Illuminate\Support\Facades\Route;
 
 // USER UTILITY //////////////////////////////////////////////////////////////
 // untuk cek siapa yang login
-Route::middleware('auth:sanctum')->get('/me', [UsersController::class, 'getProfile']);
-Route::middleware('auth:sanctum')->get('/mini-me', [UsersController::class, 'getProfileMini']);
+Route::middleware(['auth:sanctum','log'])->get('/me', [UsersController::class, 'getProfile']);
+Route::middleware(['auth:sanctum','log'])->get('/mini-me', [UsersController::class, 'getProfileMini']);
 // cek status admin dan provider
-Route::middleware(['auth:sanctum','role:provider,admin'])->get('/mystat', [UsersController::class, 'getStatus']);
+Route::middleware(['auth:sanctum','role:provider,admin','log'])->get('/mystat', [UsersController::class, 'getStatus']);
 
 // Tembak dulu sanctum/csrf-cookie untuk dapat csrf token
 // https://laravel.com/docs/9.x/sanctum#cors-and-cookies
 // https://laravel.com/docs/9.x/sanctum#spa-authenticating
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/register', [RegisterController::class, 'register'])->name('register');
-Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'logout']);
-Route::middleware('auth:sanctum')->patch('/topup', [UsersController::class, 'topup']);
+Route::middleware(['auth:sanctum','log'])->post('/logout', [LoginController::class, 'logout']);
+Route::middleware(['auth:sanctum','log'])->patch('/topup', [UsersController::class, 'topup']);
 
 Route::post('/login-api', [LoginController::class, 'loginApi'])->name('loginApi');
-Route::middleware('auth:sanctum')->post('/logout-api', [LoginController::class, 'logoutApi']);
+Route::middleware(['auth:sanctum','log'])->post('/logout-api', [LoginController::class, 'logoutApi']);
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
 // USERS ///////////////////////////////////////////////////////////
-Route::middleware(['auth:sanctum'])->prefix('users')->group(function () {
+Route::middleware(['auth:sanctum','log'])->prefix('users')->group(function () {
     ////////////////////////////////////////////////////////////
     // DEPRECATED ZONE
     Route::get('getAllCustomers', [UsersController::class, 'getAllCustomers']);
@@ -72,7 +72,7 @@ Route::middleware(['auth:sanctum'])->prefix('users')->group(function () {
     Route::delete('purge/{id}', [UsersController::class, 'purge']);
     Route::post('restore/{id}', [UsersController::class, 'restore']);
 });
-Route::middleware(['auth:sanctum'])->resource('users', UsersController::class)
+Route::middleware(['auth:sanctum','log'])->resource('users', UsersController::class)
     ->missing(function (Request $request) {
         return response()->json([
             'status' => 'not found',
@@ -86,7 +86,7 @@ Route::middleware(['auth:sanctum'])->resource('users', UsersController::class)
 
 
 // LOG /////////////////////////////////////////////////////////////////////////
-Route::middleware(['auth:sanctum','role:admin'])->resource('log', HistoryLogController::class);
+Route::middleware(['auth:sanctum','role:admin','log'])->resource('log', HistoryLogController::class);
 // avaliable actions
 // index
 ////////////////////////////////////////////////////////////////////////////////
@@ -100,17 +100,17 @@ Route::resource('menu', MenuController::class);
 
 
 // HISTORY MENU ////////////////////////////////////////////////////////////////
-Route::middleware(['auth:sanctum'])->resource('historyMenu', HistoryMenuController::class);
+Route::middleware(['auth:sanctum','log'])->resource('historyMenu', HistoryMenuController::class);
 // avaliable actions
 // index
 ////////////////////////////////////////////////////////////////////////////////
 
 
 // CART ////////////////////////////////////////////////////////////////////////
-Route::prefix('cart')->group(function () {
+Route::middleware(['auth:sanctum','log'])->prefix('cart')->group(function () {
     Route::delete('/clear', [CartController::class, 'clear']);
 });
-Route::resource('cart', CartController::class);
+Route::middleware(['auth:sanctum','log'])->resource('cart', CartController::class);
 // avaliable actions
 // index, store, show, update, destroy
 ////////////////////////////////////////////////////////////////////////////////
@@ -133,14 +133,14 @@ Route::resource('pesanan', PesananController::class);
 
 
 /// HISTORY TOPUP //////////////////////////////////////////////////////////////
-Route::middleware(['auth:sanctum'])->resource('historyTopup', HistoryTopupController::class);
+Route::middleware(['auth:sanctum','log'])->resource('historyTopup', HistoryTopupController::class);
 // avaliable actions
 // index
 ////////////////////////////////////////////////////////////////////////////////
 
 
 /// REPORT /////////////////////////////////////////////////////////////////////
-Route::middleware(['auth:sanctum', 'role:admin,provider'])->prefix('report')->group(function () {
+Route::middleware(['auth:sanctum', 'role:admin,provider','log'])->prefix('report')->group(function () {
     Route::get('/penjualan', [ReportController::class, 'penjualanTerbanyak']);
 });
 ////////////////////////////////////////////////////////////////////////////////
