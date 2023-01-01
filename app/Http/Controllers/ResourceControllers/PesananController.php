@@ -167,6 +167,7 @@ class PesananController extends Controller
         $this->authorize('create', HistoryPemesanan::class);
 
         $currUser = new Users((Array)json_decode($request->user()));
+        $users_id = $request->user()->users_id;
         $statusList = [
             'belum dikirim',
             'terkirim',
@@ -193,7 +194,7 @@ class PesananController extends Controller
             ],
         ]);
         if ($validator->fails()) {
-            LogHelper::log("alert","failed pesanan create attempt","from " . $request->ip(). ", reason: validation fail",$currUser->users_id);
+            LogHelper::log("alert","failed pesanan create attempt","from " . $request->ip(). ", reason: validation fail",$users_id);
             return response() ->json([
                 'status' => 'unprocessable content',
                 'message' => 'There are errors found on the data you have entered',
@@ -214,7 +215,7 @@ class PesananController extends Controller
             $total_price += Menu::find($detail['menu_id'])->menu_harga;
         }
         if ($request->user()->users_saldo < $total_price) {
-            LogHelper::log("alert","failed pesanan create attempt","from " . $request->ip(). ", reason: payment required",$currUser->users_id);
+            LogHelper::log("alert","failed pesanan create attempt","from " . $request->ip(). ", reason: payment required",$users_id);
             return response() ->json([
                 'status' => 'payment required',
                 'message' => 'Your credit is not enough to buy these item'
@@ -258,7 +259,7 @@ class PesananController extends Controller
             DB::commit();
         } catch (\Throwable $th) {
             DB::rollback();
-            LogHelper::log("alert","failed pesanan create attempt","from " . $request->ip(). ", reason: server error",$currUser->users_id);
+            LogHelper::log("alert","failed pesanan create attempt","from " . $request->ip(). ", reason: server error",$users_id);
             return response()->json([
                 'status' => "server error",
                 'message' => "mysql error",
@@ -271,7 +272,7 @@ class PesananController extends Controller
         $provider = Users::find($request->users_provider);
         $provider->notify(new OrderMadeNotif($historyPemesanan));
 
-        LogHelper::log("info","successful pesanan create attempt","from " . $request->ip(),$currUser->users_id);
+        LogHelper::log("info","successful pesanan create attempt","from " . $request->ip(),$users_id);
         return response()->json([
             'status' => 'created',
             'message' => 'successfully created pemesanan'
@@ -307,7 +308,7 @@ class PesananController extends Controller
             ->get();
 
         if ($carted_provider == null) {
-            LogHelper::log("alert","failed cart pesanan create attempt","from " . $request->ip(). ", reason: cart empty",$currUser->users_id);
+            LogHelper::log("alert","failed cart pesanan create attempt","from " . $request->ip(). ", reason: cart empty",$users_customer);
             return response() ->json([
                 'status' => 'not found',
                 'message' => 'Your cart is empty'
@@ -320,7 +321,7 @@ class PesananController extends Controller
             
             $total_price += $cart->sum_cart_total;
             if ($request->user()->users_saldo < $total_price) {
-                LogHelper::log("alert","failed cart pesanan create attempt","from " . $request->ip(). ", reason: payment required",$currUser->users_id);
+                LogHelper::log("alert","failed cart pesanan create attempt","from " . $request->ip(). ", reason: payment required",$users_customer);
                 return response() ->json([
                     'status' => 'payment required',
                     'message' => 'Your credit is not enough to buy these item'
@@ -374,7 +375,7 @@ class PesananController extends Controller
             DB::commit();
         } catch (\Throwable $th) {
             DB::rollback();
-            LogHelper::log("error","failed pesanan create attempt","from " . $request->ip(). ", reason: server error",$currUser->users_id);
+            LogHelper::log("error","failed pesanan create attempt","from " . $request->ip(). ", reason: server error",$users_customer);
             return response()->json([
                 'status' => "server error",
                 'message' => "mysql error",
@@ -384,7 +385,7 @@ class PesananController extends Controller
             ],500);
         }
         
-        LogHelper::log("info","successful cart pesanan create attempt","from " . $request->ip(),$currUser->users_id);
+        LogHelper::log("info","successful cart pesanan create attempt","from " . $request->ip(),$users_customer);
         return response()->json([
             'status' => 'created',
             'message' => 'successfully created pemesanan'
@@ -710,8 +711,8 @@ class PesananController extends Controller
         $pesanan = HistoryPemesanan::find($id);
         $this->authorize('update',$pesanan);
         // return $request->user()->can('view',HistoryPemesanan::find($id));
-        $currUser = $request->user();
-        
+
+        $user = $request->user();
         $currUser = new Users((Array)json_decode($request->user()));
         $statusList = [
             'belum dikirim',
@@ -734,7 +735,7 @@ class PesananController extends Controller
         ]);
         
         if ($validator->fails()) {
-            LogHelper::log("alert","failed pesanan update attempt","from " . request()->ip() . ", reason: validator fail",$currUser->users_id);
+            LogHelper::log("alert","failed pesanan update attempt","from " . request()->ip() . ", reason: validator fail",$user->users_id);
             return response() ->json([
                 'status' => 'unprocessable content',
                 'message' => 'There are errors found on the data you have entered',
