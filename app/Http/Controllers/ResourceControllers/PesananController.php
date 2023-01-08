@@ -466,7 +466,8 @@ class PesananController extends Controller
             ->whereRelation("HistoryPemesanan",'pemesanan_status','diterima')
             ->with([
                     'HistoryPemesanan:pemesanan_id,users_customer,users_provider' => [
-                        'UsersCustomer:users_id,users_nama,users_alamat,users_telepon'
+                        'UsersCustomer:users_id,users_nama,users_alamat,users_telepon',
+                        'UsersProvider'
                     ],
                     'Menu'
                 ])
