@@ -38,6 +38,8 @@ class UsersController extends Controller
             'sort' => 'nullable',
             'sort.column' => [ 'required_with:sort.type' , Rule::in($columns)],
             'sort.type' => ['required_with:sort.column', Rule::in(['asc','desc'])],
+            'sort_column' => ['required_with:sort_type', Rule::in($columns)],
+            'sort_type' => ['required_with:sort_column', Rule::in(['asc','desc'])],
             'batch_size' => ["integer", "gt:0"],
             "users_role" => [
                 'nullable', 
@@ -56,8 +58,8 @@ class UsersController extends Controller
             ]
         ]);
 
-        $sort_column = $request->sort['column'] ?? "users_id";
-        $sort_type = $request->sort['type'] ?? "asc";
+        $sort_column = $request->sort['column'] ?? $request->sort_column ?? "users_id";
+        $sort_type = $request->sort['type'] ?? $request->sort_type ?? "asc";
         // $batch_size = $request->batch_size ?? 10;
 
         $isAppend = false;

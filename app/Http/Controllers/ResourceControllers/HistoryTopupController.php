@@ -35,13 +35,15 @@ class HistoryTopupController extends Controller
             'sort' => 'nullable',
             'sort.column' => ['nullable' , Rule::in($columns)],
             'sort.type' => ['nullable', Rule::in(['asc','desc'])],
+            'sort_column' => ['required_with:sort_type', Rule::in($columns)],
+            'sort_type' => ['required_with:sort_column', Rule::in(['asc','desc'])],
             'batch_size' => ["nullable", "integer", "gt:0"],
             'date_lower' => ["nullable", 'date', "before:now"],
             'date_upper' => ["nullable", 'date', "before_or_equal:now"]
         ]);
 
-        $sort_column = $request->sort['column'] ?? "topup_tanggal";
-        $sort_type = $request->sort['type'] ?? "desc";
+        $sort_column = $request->sort['column'] ?? $request->sort_column ?? "topup_tanggal";
+        $sort_type = $request->sort['type'] ?? $request->sort_type ?? "desc";
         // $batch_size = $request->batch_size ?? 10;
         $date_lower = $request->date_lower ?? "1970-01-01";
         $date_upper = $request->date_upper ?? date("Y-m-d");

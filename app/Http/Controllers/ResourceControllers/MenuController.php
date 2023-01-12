@@ -35,8 +35,10 @@ class MenuController extends Controller
         $validator = Validator::make($request->all(),[
             "provider_id" => ["nullable", "exists:App\Models\Users,users_id", new UserRoleRule("provider")],
             'sort' => 'nullable',
-            'sort.column' => ['nullable' , Rule::in($columns)],
-            'sort.type' => ['nullable', Rule::in(['asc','desc'])],
+            'sort.column' => ['required_with:sort.type' , Rule::in($columns)],
+            'sort.type' => ['required_with:sort.column', Rule::in(['asc','desc'])],
+            'sort_column' => ['required_with:sort_type', Rule::in($columns)],
+            'sort_type' => ['required_with:sort_column', Rule::in(['asc','desc'])],
             'batch_size' => ["nullable", "integer", "gt:0"],
             'menu_nama' =>  ['nullable', "string"],
             "menu_status" => ['nullable', Rule::in(['tersedia','tidak tersedia'])]
@@ -56,8 +58,8 @@ class MenuController extends Controller
             ],422);
         }
 
-        $sort_column = $request->sort['column'] ?? "menu_id";
-        $sort_type = $request->sort['type'] ?? "asc";
+        $sort_column = $request->sort['column'] ?? $request->sort_column ?? "menu_id";
+        $sort_type = $request->sort['type'] ?? $request->sort_type ?? "asc";
         // $batch_size = $request->batch_size ?? 10;
 
         $listMenu = Menu::orderBy($sort_column,$sort_type);
@@ -118,7 +120,7 @@ class MenuController extends Controller
         if ($currUser == null) {
             $users_id = 1;
         } else {
-            $users_id = $currUser->users_id;
+            $users_id = $request->user()->users_id;
         }
         $validator = Validator::make($request->all(),[
             'menu_nama' => "required|string",
@@ -132,7 +134,7 @@ class MenuController extends Controller
             ],
         ]);
         if ($validator->fails()) {
-            LogHelper::log("alert","failed menu create attempt","from " . $request->ip(). ", reason: validation fail",$users_id);
+            LogHelper::log("alert","failed menu create attempt","from " . $request->ip(). ", reason: validation fail: ". $validator->errors(),$users_id);
             return response() ->json([
                 'status' => 'unprocessable content',
                 'message' => 'There are errors found on the data you have entered',

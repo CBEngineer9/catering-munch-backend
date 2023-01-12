@@ -23,7 +23,7 @@ class LogMiddleware
         $title = "request served";
         $desc = "url:" . $request->fullUrl() . ", ip=" . $request->ip(). " status code=" . $resp->status();   
         $user = $request->user();
-        error_log($user->user_name);
+        // error_log($user->user_name);
         LogHelper::log('info', $title, $desc, $user->users_id);
         return $resp;
     }
