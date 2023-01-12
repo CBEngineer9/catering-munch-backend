@@ -36,8 +36,8 @@ class HistoryMenuController extends Controller
             'sort' => 'nullable',
             'sort.column' => [ 'nullable' , Rule::in($columns)],
             'sort.type' => ['nullable', Rule::in(['asc','desc'])],
-            'sort_column' => ['required_with:sort_type', Rule::in($columns)],
-            'sort_type' => ['required_with:sort_column', Rule::in(['asc','desc'])],
+            'sort_column' => [Rule::in($columns)],
+            'sort_type' => [Rule::in(['asc','desc'])],
             'batch_size' => ["nullable", "integer", "gt:0"],
             'date_lower' => ['nullable', 'date', "before:now"],
             'date_upper' => ['nullable', 'date', "before_or_equal:now"]

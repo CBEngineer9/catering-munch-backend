@@ -37,8 +37,8 @@ class MenuController extends Controller
             'sort' => 'nullable',
             'sort.column' => ['required_with:sort.type' , Rule::in($columns)],
             'sort.type' => ['required_with:sort.column', Rule::in(['asc','desc'])],
-            'sort_column' => ['required_with:sort_type', Rule::in($columns)],
-            'sort_type' => ['required_with:sort_column', Rule::in(['asc','desc'])],
+            'sort_column' => [Rule::in($columns)],
+            'sort_type' => [Rule::in(['asc','desc'])],
             'batch_size' => ["nullable", "integer", "gt:0"],
             'menu_nama' =>  ['nullable', "string"],
             "menu_status" => ['nullable', Rule::in(['tersedia','tidak tersedia'])]
