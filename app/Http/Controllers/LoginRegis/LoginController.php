@@ -38,6 +38,15 @@ class LoginController extends Controller
             ],400);
         }
 
+        if($user->users_role  == "provider" && $user->users_status == "menunggu") {
+            LogHelper::log("alert","failed login attempt","from " . $request->ip(). ", reason: waiting provider",1);
+
+            return response() ->json([
+                'status' => 'bad request',
+                'message' => 'your account is not yet approved',
+            ],400);
+        }
+
         $credential = $validator->validated();
 
         if (Auth::guard('web')->attempt($credential)) {
@@ -85,6 +94,15 @@ class LoginController extends Controller
             return response() ->json([
                 'status' => 'bad request',
                 'message' => 'you are banned',
+            ],400);
+        }
+        
+        if($user->users_role  == "provider" && $user->users_status == "menunggu") {
+            LogHelper::log("alert","failed login attempt","from " . $request->ip(). ", reason: waiting provider",1);
+
+            return response() ->json([
+                'status' => 'bad request',
+                'message' => 'your account is not yet approved',
             ],400);
         }
         
