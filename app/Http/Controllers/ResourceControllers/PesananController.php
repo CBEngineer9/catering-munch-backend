@@ -11,6 +11,7 @@ use App\Models\HistoryPemesanan;
 use App\Models\Menu;
 use App\Models\Users;
 use App\Notifications\OrderMadeNotif;
+use App\Rules\UserRoleRule;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -295,6 +296,22 @@ class PesananController extends Controller
         $currUser = new Users((Array)json_decode($request->user()));
         $users_customer = $request->user()->users_id;
 
+        $validator = Validator::make($request->all(),[
+            "provider_id" => [
+                Rule::prohibitedIf(!$currUser->isAdministrator()), 
+                "exists:App\Models\Users,users_id", 
+                new UserRoleRule("provider")],
+        ]);
+        if ($validator->fails()) {
+            LogHelper::log("alert","failed pesan cart attempt","from " . $request->ip(). ", reason: validation fail ".$validator->errors(),$users_customer);
+
+            return response() ->json([
+                'status' => 'unprocessable content',
+                'message' => 'There are errors found on the data you have entered',
+                'errors' => $validator->errors(),
+            ],422);
+        }
+
         $cartFilter = function ($query) use ($users_customer) {
             $query
                 ->where("users_customer",$users_customer)
@@ -304,13 +321,19 @@ class PesananController extends Controller
         $carted_provider = Users::where("users_role","provider")
             ->whereHas("CartProvider",function(Builder $query) use ($users_customer) {
                 $query->where("users_customer",$users_customer);
-            })
+            });
+        
+        if($request->has('provider_id')) {
+            $carted_provider = $carted_provider->where('users_id',$request->provider_id);
+        }
+
+        $carted_provider = $carted_provider
             ->withSum(['CartProvider as sum_cart_jumlah' => $cartFilter], "cart_jumlah")
             ->withSum(['CartProvider as sum_cart_total' => $cartFilter], "cart_total")
             ->get();
 
         if ($carted_provider == null) {
-            LogHelper::log("alert","failed cart pesanan create attempt","from " . $request->ip(). ", reason: cart empty",$users_customer);
+            LogHelper::log("alert","failed cart pesan attempt","from " . $request->ip(). ", reason: cart empty",$users_customer);
             return response() ->json([
                 'status' => 'not found',
                 'message' => 'Your cart is empty'
@@ -323,7 +346,7 @@ class PesananController extends Controller
             
             $total_price += $cart->sum_cart_total;
             if ($request->user()->users_saldo < $total_price) {
-                LogHelper::log("alert","failed cart pesanan create attempt","from " . $request->ip(). ", reason: payment required",$users_customer);
+                LogHelper::log("alert","failed cart pesan attempt","from " . $request->ip(). ", reason: payment required",$users_customer);
                 return response() ->json([
                     'status' => 'payment required',
                     'message' => 'Your credit is not enough to buy these item'

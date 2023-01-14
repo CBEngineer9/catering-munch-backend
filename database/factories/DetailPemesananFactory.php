@@ -29,7 +29,7 @@ class DetailPemesananFactory extends Factory
             'detail_total' => function (array $attributes) use ($jumlah) {
                 return Menu::find($attributes['menu_id'])->menu_harga * $jumlah;
             },
-            "detail_tanggal" => fake()->dateTimeBetween('-10 months'),
+            "detail_tanggal" => fake()->dateTimeBetween('-2 months'),
             "detail_status" => $statusList[rand(0,2)]
         ];
     }
