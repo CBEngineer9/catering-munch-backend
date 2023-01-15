@@ -26,7 +26,7 @@ class RegisterController extends Controller
         ]);
 
         if ($validator->fails()) {
-            LogHelper::log("alert","failed register attempt","from " . $request->ip(). ", reason: validation fail",1);
+            LogHelper::log("alert","failed register attempt","from " . $request->ip(). ", reason: validation fail".$validator->errors(),1);
             
             return response() ->json([
                 'status' => 'unprocessable content',
@@ -47,7 +47,7 @@ class RegisterController extends Controller
             "users_status" => $request->users_role == "customer" ? "aktif" : "menunggu"
         ]);
 
-        LogHelper::log("info","successful register","from " . $request->ip(),0);
+        LogHelper::log("info","successful register","from " . $request->ip(),1);
 
         return response()->json([
             "status" => "created",
